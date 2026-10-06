@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuraVision AI Studio</title>
+<style>
+:root{--bg:#0b0d12;--surface:#151821;--surface2:#1d212c;--text:#f1f3f8;--muted:#a3a9b8;--line:#2a2f3c;--blue:#7aa7ff;--grad:linear-gradient(100deg,#6fa0ff,#b48cff 55%,#ff8fb8);--font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+@media (prefers-color-scheme:light){:root{--bg:#fbfbfe;--surface:#f0f2f8;--surface2:#e6e9f2;--text:#13151c;--muted:#5a6174;--line:#d9dde8;--blue:#2f63d9}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+header{display:flex;align-items:center;gap:16px;padding:16px 24px;border-bottom:1px solid var(--line)}
+.logo{font-weight:700;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+header span{color:var(--muted);font-size:14px}
+.right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:14px}
+.badge{padding:4px 12px;border-radius:999px;background:var(--grad);color:#111;font-weight:700;font-size:13px}
+.up{color:var(--blue);text-decoration:underline}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:24px;max-width:1280px;margin:0 auto;padding:24px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px;align-self:start;position:sticky;top:16px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:18px}
+.seg button{flex:1;border:0;background:none;color:var(--text);font:inherit;padding:9px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--text);color:var(--bg);font-weight:600}
+label{display:block;font-size:14px;font-weight:500;margin:14px 0 6px}
+textarea,select{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:12px}
+textarea{min-height:130px;resize:vertical}
+textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+.count{font-size:12px;color:var(--muted);text-align:right}
+.go{width:100%;margin-top:18px;padding:14px;border:0;border-radius:999px;background:var(--text);color:var(--bg);font:inherit;font-weight:700;cursor:pointer}
+.go:disabled{opacity:.6;cursor:wait}
+.msg{margin-top:12px;font-size:14px;color:#ff6b6b;min-height:20px}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+.media{background:var(--surface2);display:grid;place-items:center;text-align:center;padding:14px;color:var(--muted);font-size:14px;min-height:160px}
+.media img,.media video{width:100%;height:100%;object-fit:contain;background:#000}
+.meta{padding:12px 14px;font-size:14px;display:grid;gap:8px}
+.meta p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.acts{display:flex;gap:14px;font-size:13px}
+.acts a,.acts button{color:var(--blue);background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline;padding:0}
+.acts .del{color:var(--muted);margin-left:auto}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 10px}
+@keyframes s{to{transform:rotate(360deg)}}
+.empty{color:var(--muted);padding:60px 0;text-align:center}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.panel{position:static}}
+</style>
+</head>
+<body>
+<header><div class="logo">AuraVision AI</div><span>Studio</span>
+  <div class="right"><span id="left"></span><span class="badge" id="plan">Free</span><a class="up" id="up" href="/?upgrade=1" target="_blank" rel="noopener">Upgrade</a></div></header>
+<div class="layout">
+  <form class="panel" id="f">
+    <div class="seg" role="group" aria-label="Type">
+      <button type="button" data-t="IMAGE" aria-pressed="true">Photo</button>
+      <button type="button" data-t="VIDEO" aria-pressed="false">Video</button>
+    </div>
+    <label for="p">Describe what you want</label>
+    <textarea id="p" maxlength="1500" placeholder="A neon-lit street in the rain, cinematic, shallow depth of field"></textarea>
+    <div class="count"><span id="c">0</span>/1500</div>
+    <label for="a">Aspect ratio</label>
+    <select id="a"></select>
+    <button class="go" id="go" type="submit">Generate photo</button>
+    <p class="hint" id="hint">Photos usually take a few seconds.</p>
+    <p class="msg" id="m" role="alert"></p>
+  </form>
+  <main><div class="grid" id="g"></div><p class="empty" id="e" hidden>Nothing here yet. Write a prompt and generate your first creation.</p></main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let type='IMAGE', timer=null;
+const RATIOS={IMAGE:['1:1','16:9','9:16','4:3','3:4'],VIDEO:['16:9','9:16']};
+function setType(t){
+  type=t;
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+  $('#a').innerHTML=RATIOS[t].map(r=>`<option>${r}</option>`).join('');
+  $('#go').textContent=t==='IMAGE'?'Generate photo':'Generate video';
+  $('#hint').textContent=t==='IMAGE'?'Photos usually take a few seconds.':'Videos are about 8 seconds long and can take a few minutes.';
+}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setType(b.dataset.t));
+$('#p').oninput=e=>$('#c').textContent=e.target.value.length;
+setType('IMAGE');
+
+$('#f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const prompt=$('#p').value.trim(); $('#m').textContent='';
+  if(!prompt){$('#m').textContent='Enter a prompt first.';return}
+  $('#go').disabled=true;
+  try{
+    const r=await fetch('/api/generations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,prompt,aspectRatio:$('#a').value})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||j.error||'Request failed ('+r.status+')')}
+    $('#p').value='';$('#c').textContent='0';
+    await Promise.all([load(),loadMe()]);
+  }catch(err){$('#m').textContent=err.message}
+  finally{$('#go').disabled=false}
+});
+
+async function load(){
+  const r=await fetch('/api/generations'); if(!r.ok)return;
+  render(await r.json());
+}
+function render(items){
+  const g=$('#g'); g.innerHTML=''; $('#e').hidden=items.length>0;
+  items.forEach(i=>{
+    const c=document.createElement('article'); c.className='card';
+    const m=document.createElement('div'); m.className='media'; m.style.aspectRatio=i.aspectRatio.replace(':','/');
+    if(i.status==='DONE'){
+      const el=document.createElement(i.type==='VIDEO'?'video':'img');
+      el.src=i.mediaUrl; if(i.type==='VIDEO'){el.controls=true;el.loop=true;el.playsInline=true}else el.alt=i.prompt;
+      m.appendChild(el);
+    }else if(i.status==='FAILED'){m.textContent=i.error||'Generation failed.'}
+    else{m.innerHTML='<div><div class="spin"></div>'+(i.type==='VIDEO'?'Rendering video. This can take a few minutes.':'Creating your photo…')+'</div>'}
+    const meta=document.createElement('div'); meta.className='meta';
+    const p=document.createElement('p'); p.textContent=i.prompt; p.title=i.prompt;
+    const acts=document.createElement('div'); acts.className='acts';
+    if(i.status==='DONE'){const d=document.createElement('a');d.href=i.mediaUrl+'?download=true';d.textContent='Download';acts.appendChild(d)}
+    const del=document.createElement('button'); del.className='del'; del.textContent='Delete';
+    del.onclick=async()=>{await fetch('/api/generations/'+i.id,{method:'DELETE'});load()};
+    acts.appendChild(del); meta.append(p,acts); c.append(m,meta); g.appendChild(c);
+  });
+  const busy=items.some(i=>i.status==='PENDING'||i.status==='RUNNING');
+  clearTimeout(timer); if(busy) timer=setTimeout(load,3000);
+}
+async function loadMe(){
+  const r=await fetch('/api/me'); if(!r.ok)return;
+  const m=await r.json();
+  $('#plan').textContent=m.plan[0]+m.plan.slice(1).toLowerCase();
+  $('#left').textContent=`${m.imagesLeft} photos · ${m.videosLeft} videos left today`;
+  $('#up').hidden=m.plan==='ULTRA';
+}
+load();loadMe();
+</script>
+</body>
+</html>

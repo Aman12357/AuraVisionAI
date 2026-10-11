@@ -1,144 +1,2781 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AuraVision AI Studio</title>
-<style>
-:root{--bg:#0b0d12;--surface:#151821;--surface2:#1d212c;--text:#f1f3f8;--muted:#a3a9b8;--line:#2a2f3c;--blue:#7aa7ff;--grad:linear-gradient(100deg,#6fa0ff,#b48cff 55%,#ff8fb8);--font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-@media (prefers-color-scheme:light){:root{--bg:#fbfbfe;--surface:#f0f2f8;--surface2:#e6e9f2;--text:#13151c;--muted:#5a6174;--line:#d9dde8;--blue:#2f63d9}}
-*{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-header{display:flex;align-items:center;gap:16px;padding:16px 24px;border-bottom:1px solid var(--line)}
-.logo{font-weight:700;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-header span{color:var(--muted);font-size:14px}
-.right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:14px}
-.badge{padding:4px 12px;border-radius:999px;background:var(--grad);color:#111;font-weight:700;font-size:13px}
-.up{color:var(--blue);text-decoration:underline}
-.layout{display:grid;grid-template-columns:360px 1fr;gap:24px;max-width:1280px;margin:0 auto;padding:24px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px;align-self:start;position:sticky;top:16px}
-.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:18px}
-.seg button{flex:1;border:0;background:none;color:var(--text);font:inherit;padding:9px;border-radius:999px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--text);color:var(--bg);font-weight:600}
-label{display:block;font-size:14px;font-weight:500;margin:14px 0 6px}
-textarea,select{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:12px}
-textarea{min-height:130px;resize:vertical}
-textarea:focus,select:focus{outline:none;border-color:var(--blue)}
-.count{font-size:12px;color:var(--muted);text-align:right}
-.go{width:100%;margin-top:18px;padding:14px;border:0;border-radius:999px;background:var(--text);color:var(--bg);font:inherit;font-weight:700;cursor:pointer}
-.go:disabled{opacity:.6;cursor:wait}
-.msg{margin-top:12px;font-size:14px;color:#ff6b6b;min-height:20px}
-.hint{font-size:13px;color:var(--muted);margin-top:8px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
-.media{background:var(--surface2);display:grid;place-items:center;text-align:center;padding:14px;color:var(--muted);font-size:14px;min-height:160px}
-.media img,.media video{width:100%;height:100%;object-fit:contain;background:#000}
-.meta{padding:12px 14px;font-size:14px;display:grid;gap:8px}
-.meta p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.acts{display:flex;gap:14px;font-size:13px}
-.acts a,.acts button{color:var(--blue);background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline;padding:0}
-.acts .del{color:var(--muted);margin-left:auto}
-.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 10px}
-@keyframes s{to{transform:rotate(360deg)}}
-.empty{color:var(--muted);padding:60px 0;text-align:center}
-@media(max-width:860px){.layout{grid-template-columns:1fr}.panel{position:static}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Vision AI — Studio & Visual Generator</title>
+  <meta name="description"
+    content="Aura Vision AI Studio — Create, generate, remix, and manage AI visuals powered by Google Gemini and Aura Diffusion.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #151821;
+      --surface2: #1d212c;
+      --surface3: #262b3a;
+      --text: #f1f3f8;
+      --muted: #a3a9b8;
+      --line: #2a2f3c;
+      --line-bright: #3d4457;
+      --blue: #7aa7ff;
+      --purple: #b48cff;
+      --pink: #ff8fb8;
+      --accent: #8b5cf6;
+      --accent-hover: #7c3aed;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --grad: linear-gradient(135deg, #6fa0ff 0%, #b48cff 50%, #ff8fb8 100%);
+      --grad-subtle: linear-gradient(135deg, rgba(111, 160, 255, 0.15) 0%, rgba(180, 140, 255, 0.15) 50%, rgba(255, 143, 184, 0.15) 100%);
+      --font: "Google Sans Flex", "DM Sans", "Inter", system-ui, -apple-system, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 25px rgba(180, 140, 255, 0.25);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f8f9fc;
+      --surface: #ffffff;
+      --surface2: #f0f2f7;
+      --surface3: #e4e7f0;
+      --text: #0f141f;
+      --muted: #5e6678;
+      --line: #dbe0eb;
+      --line-bright: #cbd3e2;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --accent: #7c3aed;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--line);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--line-bright);
+    }
+
+    /* Top Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-container {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--grad);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: 0 2px 10px rgba(180, 140, 255, 0.4);
+    }
+
+    .brand-title {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(180, 140, 255, 0.15);
+      color: var(--purple);
+      border: 1px solid rgba(180, 140, 255, 0.3);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 4px;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--grad);
+      box-shadow: 0 2px 10px rgba(111, 160, 255, 0.3);
+    }
+
+    .tab-badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+    }
+
+    /* Nav Actions */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .credits-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .credits-icon {
+      color: #f59e0b;
+      font-size: 14px;
+    }
+
+    .home-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .home-link:hover {
+      color: var(--text);
+      border-color: var(--line);
+      background: var(--surface);
+    }
+
+    .theme-toggle-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--text);
+      border-color: var(--line-bright);
+    }
+
+    .user-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 5px 6px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .user-profile-btn:hover {
+      border-color: var(--line-bright);
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--grad);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Main Studio Container */
+    main {
+      flex: 1;
+      max-width: 1520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* STUDIO VIEW (Create Layout) */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .studio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Control Panel (Left Column) */
+    .control-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .engine-toggle-wrap {
+      display: flex;
+      background: var(--surface2);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .engine-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .engine-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Prompt Box */
+    .prompt-box-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .prompt-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-btn-sm {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--blue);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tool-btn-sm:hover {
+      background: var(--surface3);
+      color: #fff;
+    }
+
+    .prompt-input-container {
+      position: relative;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      transition: all 0.18s ease;
+    }
+
+    .prompt-input-container:focus-within {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(180, 140, 255, 0.2);
+    }
+
+    .prompt-textarea {
+      width: 100%;
+      min-height: 110px;
+      max-height: 240px;
+      padding: 14px 14px 34px 14px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .prompt-footer {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .prompt-footer-actions {
+      pointer-events: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Style Presets */
+    .setting-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .style-presets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .style-card {
+      padding: 10px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .style-card:hover {
+      border-color: var(--line-bright);
+      background: var(--surface3);
+    }
+
+    .style-card.active {
+      border-color: var(--purple);
+      background: rgba(180, 140, 255, 0.12);
+      box-shadow: 0 0 12px rgba(180, 140, 255, 0.2);
+    }
+
+    .style-card-icon {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .style-card-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Aspect Ratio Selector */
+    .aspect-pills {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .aspect-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .aspect-pill:hover {
+      border-color: var(--line-bright);
+    }
+
+    .aspect-pill.active {
+      border-color: var(--purple);
+      background: rgba(180, 140, 255, 0.12);
+    }
+
+    .aspect-icon-box {
+      border: 1.5px solid var(--muted);
+      border-radius: 3px;
+    }
+
+    .aspect-pill.active .aspect-icon-box {
+      border-color: var(--purple);
+    }
+
+    .aspect-pill span {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Options Row (Quality, Count) */
+    .options-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .segmented-control {
+      display: flex;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .segmented-btn {
+      flex: 1;
+      padding: 6px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .segmented-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Advanced Accordion */
+    .accordion-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .accordion-toggle:hover {
+      color: var(--text);
+    }
+
+    .accordion-content {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 6px;
+    }
+
+    .accordion-content.open {
+      display: flex;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      color: var(--text);
+    }
+
+    .input-field:focus {
+      border-color: var(--purple);
+    }
+
+    /* Big Generate Button */
+    .btn-generate {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--grad);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(180, 140, 255, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 26px rgba(180, 140, 255, 0.55);
+    }
+
+    .btn-generate:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Results Stage (Right Column) */
+    .results-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .stage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px 22px;
+    }
+
+    .stage-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stage-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stage-stats {
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+
+    .stage-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface3);
+      border-color: var(--line-bright);
+    }
+
+    /* Generated Images Grid */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* Image Card */
+    .image-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .image-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-bright);
+      box-shadow: var(--shadow-md);
+    }
+
+    .image-preview-wrap {
+      position: relative;
+      width: 100%;
+      background: var(--surface2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-preview-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .image-card:hover .image-preview-wrap img {
+      transform: scale(1.02);
+    }
+
+    /* Image Card Overlay / Actions */
+    .image-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      z-index: 2;
+    }
+
+    .image-card:hover .image-overlay {
+      opacity: 1;
+    }
+
+    .overlay-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .aspect-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      border-radius: 6px;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(15, 20, 30, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.15s ease;
+    }
+
+    .action-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.06);
+    }
+
+    .action-icon-btn.btn-delete:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .action-icon-btn.is-fav {
+      color: #ff4757;
+      background: rgba(255, 71, 87, 0.2);
+      border-color: #ff4757;
+    }
+
+    .overlay-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-footer-info {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--surface);
+    }
+
+    .card-prompt {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-weight: 500;
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .card-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag-badge {
+      padding: 2px 7px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Skeleton Loading Cards */
+    .skeleton-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-preview {
+      width: 100%;
+      height: 260px;
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .skeleton-shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      background: var(--surface);
+      border: 1px dashed var(--line-bright);
+      border-radius: var(--radius-xl);
+      padding: 56px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: var(--grad-subtle);
+      border: 1px solid rgba(180, 140, 255, 0.3);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      color: var(--purple);
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 440px;
+    }
+
+    .sample-prompts-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 680px;
+      margin-top: 8px;
+    }
+
+    .sample-prompt-chip {
+      padding: 6px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .sample-prompt-chip:hover {
+      background: var(--surface3);
+      color: var(--text);
+      border-color: var(--purple);
+    }
+
+    /* MY CREATIONS TAB (SAVED PHOTOS) */
+    .creations-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .creations-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .creations-title {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 13px;
+      outline: none;
+      color: var(--text);
+    }
+
+    .search-input:focus {
+      border-color: var(--purple);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-chip:hover {
+      color: var(--text);
+      border-color: var(--line-bright);
+    }
+
+    .filter-chip.active {
+      background: var(--grad);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .btn-danger-outline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-danger-outline:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* EXPLORE GALLERY TAB */
+    .explore-hero {
+      text-align: center;
+      padding: 32px 0 40px;
+    }
+
+    .explore-hero h2 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .explore-hero p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* DASHBOARD TAB */
+    .dash-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .metric-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dash-columns {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 28px;
+    }
+
+    @media (max-width: 900px) {
+      .dash-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .dash-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 26px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dash-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* MODALS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      border-radius: var(--radius-xl);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes modalPop {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-close-btn:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--surface2);
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal .modal-box {
+      max-width: 1000px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lightbox-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      max-height: 78vh;
+    }
+
+    @media (max-width: 768px) {
+      .lightbox-content-grid {
+        grid-template-columns: 1fr;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+    }
+
+    .lightbox-image-wrap {
+      background: #000;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      max-height: 78vh;
+    }
+
+    .lightbox-image-wrap img {
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+    }
+
+    .lightbox-sidebar {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      background: var(--surface);
+    }
+
+    /* TOAST NOTIFICATIONS */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      min-width: 280px;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--success);
+    }
+    .toast.danger {
+      border-left: 4px solid var(--danger);
+    }
+    .toast.info {
+      border-left: 4px solid var(--blue);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
 </head>
+
 <body>
-<header><div class="logo">AuraVision AI</div><span>Studio</span>
-  <div class="right"><span id="left"></span><span class="badge" id="plan">Free</span><a class="up" id="up" href="/?upgrade=1" target="_blank" rel="noopener">Upgrade</a></div></header>
-<div class="layout">
-  <form class="panel" id="f">
-    <div class="seg" role="group" aria-label="Type">
-      <button type="button" data-t="IMAGE" aria-pressed="true">Photo</button>
-      <button type="button" data-t="VIDEO" aria-pressed="false">Video</button>
-    </div>
-    <label for="p">Describe what you want</label>
-    <textarea id="p" maxlength="1500" placeholder="A neon-lit street in the rain, cinematic, shallow depth of field"></textarea>
-    <div class="count"><span id="c">0</span>/1500</div>
-    <div id="modelBox">
-      <label for="model">Image model</label>
-      <select id="model" aria-describedby="modelHelp">
-        <option value="gemini-3-pro-image">Nano Banana Pro · Highest quality</option>
-        <option value="gemini-3.1-flash-image" selected>Nano Banana 2 · Recommended</option>
-        <option value="gemini-3.1-flash-lite-image">Nano Banana 2 Lite · Faster, lower cost</option>
-      </select>
-      <p class="hint" id="modelHelp">Choose the image model for this generation.</p>
-    </div>
-    <label for="a">Aspect ratio</label>
-    <select id="a"></select>
-    <button class="go" id="go" type="submit">Generate photo</button>
-    <p class="hint" id="hint">Photos usually take a few seconds.</p>
-    <p class="msg" id="m" role="alert"></p>
-  </form>
-  <main><div class="grid" id="g"></div><p class="empty" id="e" hidden>Nothing here yet. Write a prompt and generate your first creation.</p></main>
-</div>
-<script>
-const $=s=>document.querySelector(s);
-let type='IMAGE', timer=null;
-const RATIOS={IMAGE:['1:1','16:9','9:16','4:3','3:4'],VIDEO:['16:9','9:16']};
-function setType(t){
-  type=t;
-  $('#modelBox').hidden=t!=='IMAGE';
-  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
-  $('#a').innerHTML=RATIOS[t].map(r=>`<option>${r}</option>`).join('');
-  $('#go').textContent=t==='IMAGE'?'Generate photo':'Generate video';
-  $('#hint').textContent=t==='IMAGE'?'Photos usually take a few seconds.':'Videos are about 8 seconds long and can take a few minutes.';
-}
-document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setType(b.dataset.t));
-$('#p').oninput=e=>$('#c').textContent=e.target.value.length;
-setType('IMAGE');
+  <!-- HEADER -->
+  <header>
+    <div class="nav-container">
+      <div class="brand-wrap">
+        <a href="index.html" class="brand-logo" title="Back to AuraVision AI Home">
+          <div class="brand-logo-icon">✦</div>
+          <span class="brand-title">AuraVision AI</span>
+        </a>
+        <span class="brand-badge">Studio</span>
+      </div>
 
-$('#f').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const prompt=$('#p').value.trim(); $('#m').textContent='';
-  if(!prompt){$('#m').textContent='Enter a prompt first.';return}
-  $('#go').disabled=true;
-  try{
-    const r=await fetch('/api/generations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,prompt,aspectRatio:$('#a').value,model:type==='IMAGE'?$('#model').value:null})});
-    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||j.error||'Request failed ('+r.status+')')}
-    $('#p').value='';$('#c').textContent='0';
-    await Promise.all([load(),loadMe()]);
-  }catch(err){$('#m').textContent=err.message}
-  finally{$('#go').disabled=false}
-});
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" aria-label="Studio Views">
+        <button class="tab-btn active" data-tab="studio" onclick="switchTab('studio')">
+          <span>🎨</span> Studio
+        </button>
+        <button class="tab-btn" data-tab="creations" onclick="switchTab('creations')">
+          <span>🖼️</span> My Creations
+          <span class="tab-badge" id="creationsCountBadge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="explore" onclick="switchTab('explore')">
+          <span>✨</span> Explore
+        </button>
+        <button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <span>📊</span> Dashboard
+        </button>
+      </nav>
 
-async function load(){
-  const r=await fetch('/api/generations'); if(!r.ok)return;
-  render(await r.json());
-}
-function render(items){
-  const g=$('#g'); g.innerHTML=''; $('#e').hidden=items.length>0;
-  items.forEach(i=>{
-    const c=document.createElement('article'); c.className='card';
-    const m=document.createElement('div'); m.className='media'; m.style.aspectRatio=i.aspectRatio.replace(':','/');
-    if(i.status==='DONE'){
-      const el=document.createElement(i.type==='VIDEO'?'video':'img');
-      el.src=i.mediaUrl; if(i.type==='VIDEO'){el.controls=true;el.loop=true;el.playsInline=true}else el.alt=i.prompt;
-      m.appendChild(el);
-    }else if(i.status==='FAILED'){m.textContent=i.error||'Generation failed.'}
-    else{m.innerHTML='<div><div class="spin"></div>'+(i.type==='VIDEO'?'Rendering video. This can take a few minutes.':'Creating your photo…')+'</div>'}
-    const meta=document.createElement('div'); meta.className='meta';
-    const p=document.createElement('p'); p.textContent=i.prompt; p.title=i.prompt;
-    const model=document.createElement('small'); model.style.color='var(--muted)'; model.textContent=i.model||'';
-    const acts=document.createElement('div'); acts.className='acts';
-    if(i.status==='DONE'){const d=document.createElement('a');d.href=i.mediaUrl+'?download=true';d.textContent='Download';acts.appendChild(d)}
-    const del=document.createElement('button'); del.className='del'; del.textContent='Delete';
-    del.onclick=async()=>{await fetch('/api/generations/'+i.id,{method:'DELETE'});load()};
-    acts.appendChild(del); meta.append(p); if(model.textContent) meta.append(model); meta.append(acts); c.append(m,meta); g.appendChild(c);
-  });
-  const busy=items.some(i=>i.status==='PENDING'||i.status==='RUNNING');
-  clearTimeout(timer); if(busy) timer=setTimeout(load,3000);
-}
-async function loadMe(){
-  const r=await fetch('/api/me'); if(!r.ok)return;
-  const m=await r.json();
-  $('#plan').textContent=m.plan[0]+m.plan.slice(1).toLowerCase();
-  $('#left').textContent=`${m.imagesLeft} photos · ${m.videosLeft} videos left today`;
-  $('#up').hidden=m.plan==='ULTRA';
-}
-load();loadMe();
-</script>
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <div class="credits-pill" title="Remaining generation credits">
+          <span class="credits-icon">⚡</span>
+          <span id="creditsCount">25</span> Credits
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          🌓
+        </button>
+        <button class="user-profile-btn" onclick="openAuthModal()" title="Account & Plan">
+          <div class="user-avatar" id="navUserAvatar">A</div>
+          <span class="user-name" id="navUserName">Artist</span>
+        </button>
+        <a href="index.html" class="home-link" title="Return to landing page">
+          <span>←</span> Home
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main>
+    <!-- TAB 1: STUDIO (CREATE WORKSPACE) -->
+    <div class="tab-content active" id="tab-studio">
+      <div class="studio-grid">
+        <!-- Control Panel (Left Column) -->
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>⚡</span> Generation Engine
+            </div>
+            <div class="engine-toggle-wrap">
+              <button class="engine-btn active" id="engineAura" onclick="setEngine('aura')">Aura 3.2</button>
+              <button class="engine-btn" id="engineGemini" onclick="setEngine('gemini')">Gemini Vision</button>
+            </div>
+          </div>
+
+          <!-- Prompt Box -->
+          <div class="prompt-box-wrap">
+            <div class="label-row">
+              <span>Prompt Description</span>
+              <div class="prompt-tools">
+                <button class="tool-btn-sm" onclick="inspirePrompt()" title="Generate random inspiration prompt">
+                  🎲 Inspire
+                </button>
+                <button class="tool-btn-sm" onclick="enhancePrompt()" title="Enrich prompt with cinematic details">
+                  ✨ Magic Enhance
+                </button>
+              </div>
+            </div>
+            <div class="prompt-input-container">
+              <textarea class="prompt-textarea" id="promptInput"
+                placeholder="Describe your vision in detail... e.g. A neon-lit cybernetic observatory at midnight, volumetric aurora borealis in deep violet and gold"
+                oninput="updatePromptCount()"></textarea>
+              <div class="prompt-footer">
+                <span id="promptCharCount">0 characters</span>
+                <span style="opacity: 0.7;">Press Ctrl+Enter to generate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style Presets -->
+          <div class="setting-section">
+            <div class="setting-title">
+              <span>Visual Style</span>
+              <span id="currentStyleLabel" style="font-weight: 500; color: var(--purple);">Cinematic</span>
+            </div>
+            <div class="style-presets-grid" id="styleGrid">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Aspect Ratio Selector -->
+          <div class="setting-section">
+            <div class="setting-title">
+              <span>Aspect Ratio</span>
+              <span id="currentAspectLabel" style="font-weight: 500; color: var(--purple);">1:1 Square</span>
+            </div>
+            <div class="aspect-pills" id="aspectPills">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Options Row (Quality & Count) -->
+          <div class="options-row">
+            <div class="setting-section">
+              <div class="setting-title">Quality Mode</div>
+              <div class="segmented-control" id="qualityControl">
+                <button class="segmented-btn" onclick="setQuality('Fast')">Fast</button>
+                <button class="segmented-btn active" onclick="setQuality('HD')">HD</button>
+                <button class="segmented-btn" onclick="setQuality('Ultra')">Ultra</button>
+              </div>
+            </div>
+            <div class="setting-section">
+              <div class="setting-title">Batch Size</div>
+              <div class="segmented-control" id="countControl">
+                <button class="segmented-btn" onclick="setCount(1)">1</button>
+                <button class="segmented-btn active" onclick="setCount(2)">2</button>
+                <button class="segmented-btn" onclick="setCount(4)">4</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Collapsible Settings -->
+          <div class="setting-section">
+            <button class="accordion-toggle" onclick="toggleAccordion('advSettings')">
+              <span id="advChevron">▶</span> Advanced Generation Controls
+            </button>
+            <div class="accordion-content" id="advSettings">
+              <div>
+                <label style="font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block;">Negative Prompt</label>
+                <input type="text" class="input-field" id="negativePromptInput"
+                  placeholder="blurry, distorted, oversaturated, watermark, bad anatomy">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block;">Seed (Optional)</label>
+                  <input type="number" class="input-field" id="seedInput" placeholder="Random seed">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                  <button class="btn-secondary" onclick="randomizeSeed()" style="height: 38px;">🎲 Random</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Big Generate Button -->
+          <button class="btn-generate" id="generateBtn" onclick="handleGenerate()">
+            <span id="btnIcon">✦</span>
+            <span id="btnText">Generate Visuals</span>
+          </button>
+        </div>
+
+        <!-- Results Stage (Right Column) -->
+        <div class="results-stage">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <div class="stage-title" id="stageStatusTitle">Creative Canvas</div>
+              <div class="stage-stats" id="stageStatsText">Ready to create</div>
+            </div>
+            <div class="stage-actions">
+              <button class="btn-secondary" onclick="clearResultsCanvas()" title="Clear current canvas">
+                <span>🧹</span> Clear Canvas
+              </button>
+            </div>
+          </div>
+
+          <!-- Images Grid Container -->
+          <div class="images-grid" id="currentSessionGrid">
+            <!-- Active Generated Images or Empty State rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MY CREATIONS (SAVED PHOTOS VIEW) -->
+    <div class="tab-content" id="tab-creations">
+      <div class="creations-header">
+        <div class="creations-title-wrap">
+          <h2 class="creations-title">My Saved Photos</h2>
+          <span class="stage-stats" id="totalSavedBadge">0 photos</span>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="creationsSearchInput"
+              placeholder="Search by prompt or style..." oninput="renderCreations()">
+          </div>
+
+          <div class="filter-chips" id="creationFilterChips">
+            <button class="filter-chip active" onclick="setCreationFilter('All')">All</button>
+            <button class="filter-chip" onclick="setCreationFilter('Favorites')">❤️ Favorites</button>
+            <button class="filter-chip" onclick="setCreationFilter('Cinematic')">Cinematic</button>
+            <button class="filter-chip" onclick="setCreationFilter('Anime')">Anime</button>
+            <button class="filter-chip" onclick="setCreationFilter('Cyberpunk')">Cyberpunk</button>
+            <button class="filter-chip" onclick="setCreationFilter('3D Render')">3D Render</button>
+          </div>
+
+          <button class="btn-danger-outline" onclick="openClearAllModal()" title="Remove all saved creations">
+            <span>🗑️</span> Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Saved Creations Grid -->
+      <div class="images-grid" id="savedCreationsGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: EXPLORE GALLERY VIEW -->
+    <div class="tab-content" id="tab-explore">
+      <div class="explore-hero">
+        <h2>Curated Inspiration Gallery</h2>
+        <p>Explore verified AI prompts and visual aesthetics created with Aura Vision AI. Click Remix to produce your own variation in the studio.</p>
+      </div>
+
+      <div class="images-grid" id="exploreGalleryGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 4: DASHBOARD VIEW -->
+    <div class="tab-content" id="tab-dashboard">
+      <div class="dash-metrics-grid">
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-label">TOTAL GENERATIONS</span>
+            <div class="metric-icon-box" style="background: rgba(111, 160, 255, 0.15); color: var(--blue);">⚡</div>
+          </div>
+          <div class="metric-value" id="dashTotalGen">0</div>
+          <div class="metric-sub">Visuals generated with AI</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-label">SAVED PHOTOS</span>
+            <div class="metric-icon-box" style="background: rgba(255, 143, 184, 0.15); color: var(--pink);">🖼️</div>
+          </div>
+          <div class="metric-value" id="dashSavedCount">0</div>
+          <div class="metric-sub">Stored in your offline library</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-label">CREDITS REMAINING</span>
+            <div class="metric-icon-box" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">✨</div>
+          </div>
+          <div class="metric-value" id="dashCredits">25</div>
+          <div class="metric-sub">Free starter tier balance</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-label">AVERAGE GENERATION SPEED</span>
+            <div class="metric-icon-box" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">⚡</div>
+          </div>
+          <div class="metric-value">1.8s</div>
+          <div class="metric-sub">Ultra-fast dual inference</div>
+        </div>
+      </div>
+
+      <div class="dash-columns">
+        <div class="dash-card">
+          <div class="dash-card-title">
+            <span>Recent Studio Activity</span>
+            <button class="btn-secondary" onclick="switchTab('creations')">View All</button>
+          </div>
+          <div id="dashRecentActivityList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-title">
+            <span>Current Plan: Starter</span>
+            <span class="brand-badge">Free</span>
+          </div>
+          <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">
+            Upgrade to AuraVision Pro to unlock unlimited 4K generations, commercial licensing, and priority batch queue.
+          </p>
+          <ul style="font-size: 13px; color: var(--muted); margin-bottom: 20px; list-style: none; display: flex; flex-direction: column; gap: 8px;">
+            <li>✓ Unlimited Ultra generations</li>
+            <li>✓ Gemini Vision Multimodal 1.5 Pro</li>
+            <li>✓ Private cloud synchronization</li>
+            <li>✓ Custom LoRA style models</li>
+          </ul>
+          <button class="btn-generate" onclick="alert('Upgrading feature simulation! Enjoy unlimited creations.')">
+            Upgrade to Pro — $19/mo
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- LIGHTBOX / FULLSCREEN MODAL -->
+  <div class="modal-backdrop lightbox-modal" id="lightboxModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Visual Details & Inspection</span>
+        <button class="modal-close-btn" onclick="closeLightbox()">✕</button>
+      </div>
+      <div class="lightbox-content-grid">
+        <div class="lightbox-image-wrap">
+          <img id="lightboxImg" src="" alt="Enlarged Visual Preview">
+        </div>
+        <div class="lightbox-sidebar">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Prompt</label>
+            <p id="lightboxPrompt" style="font-size: 14px; margin-top: 6px; line-height: 1.5; color: var(--text);"></p>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="lightboxBadges"></div>
+          
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-secondary" onclick="copyLightboxPrompt()">
+              <span>📋</span> Copy Prompt
+            </button>
+            <button class="btn-secondary" onclick="downloadLightboxImage()">
+              <span>⬇️</span> Download Photo (PNG)
+            </button>
+            <button class="btn-secondary" onclick="remixLightboxPrompt()">
+              <span>🎨</span> Remix in Studio
+            </button>
+            <button class="btn-danger-outline" onclick="deleteLightboxPhoto()">
+              <span>🗑️</span> Delete Saved Photo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <span class="modal-title" id="authModalTitle">Aura Vision AI Account</span>
+        <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <div class="brand-logo-icon" style="margin: 0 auto 12px; width: 44px; height: 44px; font-size: 22px;">✦</div>
+          <h3 style="font-size: 18px; font-weight: 700;">Welcome to Aura Studio</h3>
+          <p style="font-size: 13px; color: var(--muted);">Sign in to sync your generated visual creations and credits.</p>
+        </div>
+
+        <button class="btn-secondary" onclick="simulatedGoogleLogin()" style="justify-content: center; height: 42px;">
+          <span>🌐</span> Continue with Google
+        </button>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="flex: 1; height: 1px; background: var(--line);"></div>
+          <span style="font-size: 11px; color: var(--muted); text-transform: uppercase;">or email</span>
+          <div style="flex: 1; height: 1px; background: var(--line);"></div>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block;">Email Address</label>
+          <input type="email" class="input-field" id="authEmailInput" placeholder="creator@auravision.ai" value="creator@auravision.ai">
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block;">Password</label>
+          <input type="password" class="input-field" id="authPasswordInput" placeholder="••••••••" value="secret123">
+        </div>
+
+        <button class="btn-generate" onclick="handleEmailLogin()" style="height: 42px; font-size: 14px;">
+          Sign In to Studio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM CLEAR ALL MODAL -->
+  <div class="modal-backdrop" id="clearAllModal">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <span class="modal-title">Clear All Saved Photos?</span>
+        <button class="modal-close-btn" onclick="closeClearAllModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 14px; color: var(--muted); line-height: 1.5;">
+          Are you sure you want to delete all saved photos from your library? This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeClearAllModal()">Cancel</button>
+        <button class="btn-danger-outline" onclick="confirmClearAll()">Yes, Delete All Photos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- APPLICATION LOGIC (VANILLA JS) -->
+  <script>
+    /* ==========================================================================
+       CONSTANTS & STATE
+       ========================================================================== */
+    const STYLES = [
+      { id: 'Cinematic', name: 'Cinematic', icon: '🎬', promptSuffix: ', cinematic lighting, 8k, anamorphic lens, highly detailed' },
+      { id: 'Realistic', name: 'Photoreal', icon: '📷', promptSuffix: ', 35mm photograph, natural lighting, realistic textures' },
+      { id: 'Anime', name: 'Anime', icon: '✨', promptSuffix: ', modern anime aesthetic, Makoto Shinkai style, vibrant colors' },
+      { id: 'Cyberpunk', name: 'Cyberpunk', icon: '🌆', promptSuffix: ', cyberpunk neon lighting, volumetric rain reflections, futuristic' },
+      { id: '3D Render', name: '3D Render', icon: '🔮', promptSuffix: ', 3D Octane render, raytraced subsurface scattering, clay and glass' },
+      { id: 'Oil Painting', name: 'Oil Painting', icon: '🎨', promptSuffix: ', expressive oil painting brushstrokes, textured canvas, impasto' },
+      { id: 'Concept Art', name: 'Concept Art', icon: '🏔️', promptSuffix: ', video game concept art, matte painting, epic composition' },
+      { id: 'Minimalist', name: 'Minimalist', icon: '⚪', promptSuffix: ', clean minimalist vector art, negative space, elegant balance' },
+      { id: 'Watercolor', name: 'Watercolor', icon: '🖌️', promptSuffix: ', soft watercolor bleed, flowing pigments, paper texture' },
+    ];
+
+    const ASPECT_RATIOS = [
+      { id: '1:1', name: '1:1', label: 'Square', w: 14, h: 14, cssRatio: '1 / 1' },
+      { id: '16:9', name: '16:9', label: 'Landscape', w: 20, h: 11, cssRatio: '16 / 9' },
+      { id: '9:16', name: '9:16', label: 'Story/Reel', w: 11, h: 20, cssRatio: '9 / 16' },
+      { id: '4:3', name: '4:3', label: 'Classic', w: 16, h: 12, cssRatio: '4 / 3' },
+      { id: '3:4', name: '3:4', label: 'Tall', w: 12, h: 16, cssRatio: '3 / 4' },
+    ];
+
+    const INSPIRING_PROMPTS = [
+      "A serene cybernetic greenhouse on an orbital ring, neon cherry blossoms with translucent petals, soft starlight",
+      "An ancient sunken library illuminated by bio-luminescent manta rays, golden scrolls drifting in crystal water",
+      "A cinematic portrait of a robotic geisha in rain-soaked Neo Tokyo, chromatic aberration, reflective obsidian visor",
+      "A crystalline dragon coiled atop an emerald glacier at golden hour, prism light refraction, hyper-realistic scale",
+      "A cozy retro-futuristic laboratory filled with glowing vacuum tubes, holographic schematics, and warm coffee steam",
+      "Majestic floating islands connected by waterfalls of pure light, lush violet forests, epic cinematic scale",
+      "An astronaut discovering an alien meadow made of fiber-optic glass flowers, twin crescent moons in the atmosphere"
+    ];
+
+    const CURATED_EXPLORE = [
+      {
+        id: 'cur_1',
+        prompt: 'Futuristic solar sanctuary with botanical architecture, volumetric sunlight cascading through stained geometric glass',
+        style: 'Cinematic',
+        aspectRatio: '16:9',
+        seed: 1420
+      },
+      {
+        id: 'cur_2',
+        prompt: 'Cybernetic tiger prowling neon alleyways of Neo-Seoul, puddle reflections, cinematic depth of field',
+        style: 'Cyberpunk',
+        aspectRatio: '1:1',
+        seed: 2891
+      },
+      {
+        id: 'cur_3',
+        prompt: 'Ethereal spirit fox with celestial markings resting beneath an ancient wisteria tree, anime style',
+        style: 'Anime',
+        aspectRatio: '9:16',
+        seed: 3994
+      },
+      {
+        id: 'cur_4',
+        prompt: 'Floating clockwork observatory above clouds at twilight, intricate bronze gears and brass telescopes',
+        style: '3D Render',
+        aspectRatio: '16:9',
+        seed: 4812
+      },
+      {
+        id: 'cur_5',
+        prompt: 'Expressive oil painting of misty coastal cliffs during an ocean storm, thick impasto brush strokes',
+        style: 'Oil Painting',
+        aspectRatio: '4:3',
+        seed: 5120
+      },
+      {
+        id: 'cur_6',
+        prompt: 'Minimalist neon desert horizon with single monolith, chrome sphere hovering motionless, twilight gradient',
+        style: 'Minimalist',
+        aspectRatio: '16:9',
+        seed: 6301
+      }
+    ];
+
+    // App State
+    let currentEngine = 'aura';
+    let currentStyle = STYLES[0].id;
+    let currentAspect = ASPECT_RATIOS[0].id;
+    let currentQuality = 'HD';
+    let currentCount = 2;
+    let isGenerating = false;
+    let currentSessionImages = [];
+    let activeLightboxImage = null;
+    let creationFilter = 'All';
+
+    /* ==========================================================================
+       STORAGE HELPERS
+       ========================================================================== */
+    function getStoredCreations() {
+      try {
+        const stored = localStorage.getItem('aura_creations');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveStoredCreations(list) {
+      try {
+        localStorage.setItem('aura_creations', JSON.stringify(list));
+      } catch (e) {
+        console.error('Storage error', e);
+      }
+    }
+
+    function getCredits() {
+      const stored = localStorage.getItem('aura_credits');
+      return stored ? parseInt(stored, 10) : 25;
+    }
+
+    function setCredits(val) {
+      localStorage.setItem('aura_credits', val);
+      document.getElementById('creditsCount').textContent = val;
+      document.getElementById('dashCredits').textContent = val;
+    }
+
+    function getTotalGenerations() {
+      const stored = localStorage.getItem('aura_gen_count');
+      return stored ? parseInt(stored, 10) : 0;
+    }
+
+    function incrementGenerations(count) {
+      const newVal = getTotalGenerations() + count;
+      localStorage.setItem('aura_gen_count', newVal);
+      document.getElementById('dashTotalGen').textContent = newVal;
+    }
+
+    /* ==========================================================================
+       INITIALIZATION
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      renderStyleGrid();
+      renderAspectPills();
+      updatePromptCount();
+      setCredits(getCredits());
+      document.getElementById('dashTotalGen').textContent = getTotalGenerations();
+
+      // Check if URL has prompt query (from index.html explore links)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryPrompt = urlParams.get('prompt');
+      if (queryPrompt) {
+        document.getElementById('promptInput').value = decodeURIComponent(queryPrompt);
+        updatePromptCount();
+      }
+
+      renderSessionGrid();
+      renderCreations();
+      renderExploreGallery();
+      updateDashboard();
+
+      // Keyboard shortcut: Ctrl+Enter or Cmd+Enter
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          handleGenerate();
+        }
+        if (e.key === 'Escape') {
+          closeLightbox();
+          closeAuthModal();
+          closeClearAllModal();
+        }
+      });
+    });
+
+    /* ==========================================================================
+       THEME MANAGEMENT
+       ========================================================================== */
+    function initTheme() {
+      const saved = localStorage.getItem('aura_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtnIcon(saved);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('aura_theme', next);
+      updateThemeBtnIcon(next);
+      showToast(`Switched to ${next} theme`, 'info');
+    }
+
+    function updateThemeBtnIcon(theme) {
+      document.getElementById('themeToggleBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    /* ==========================================================================
+       TAB NAVIGATION
+       ========================================================================== */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `tab-${tabId}`);
+      });
+
+      if (tabId === 'creations') {
+        renderCreations();
+      } else if (tabId === 'dashboard') {
+        updateDashboard();
+      }
+    }
+
+    /* ==========================================================================
+       STYLE & ASPECT CONTROLS
+       ========================================================================== */
+    function renderStyleGrid() {
+      const container = document.getElementById('styleGrid');
+      container.innerHTML = STYLES.map(s => `
+        <div class="style-card ${s.id === currentStyle ? 'active' : ''}" onclick="selectStyle('${s.id}')">
+          <div class="style-card-icon">${s.icon}</div>
+          <div class="style-card-name">${s.name}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectStyle(id) {
+      currentStyle = id;
+      const found = STYLES.find(s => s.id === id);
+      document.getElementById('currentStyleLabel').textContent = found ? found.name : id;
+      renderStyleGrid();
+    }
+
+    function renderAspectPills() {
+      const container = document.getElementById('aspectPills');
+      container.innerHTML = ASPECT_RATIOS.map(a => `
+        <div class="aspect-pill ${a.id === currentAspect ? 'active' : ''}" onclick="selectAspect('${a.id}')">
+          <div class="aspect-icon-box" style="width:${a.w}px; height:${a.h}px;"></div>
+          <span>${a.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectAspect(id) {
+      currentAspect = id;
+      const found = ASPECT_RATIOS.find(a => a.id === id);
+      document.getElementById('currentAspectLabel').textContent = found ? `${found.name} ${found.label}` : id;
+      renderAspectPills();
+    }
+
+    function setQuality(q) {
+      currentQuality = q;
+      document.querySelectorAll('#qualityControl .segmented-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === q);
+      });
+    }
+
+    function setCount(cnt) {
+      currentCount = cnt;
+      document.querySelectorAll('#countControl .segmented-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.textContent.trim(), 10) === cnt);
+      });
+    }
+
+    function setEngine(eng) {
+      currentEngine = eng;
+      document.getElementById('engineAura').classList.toggle('active', eng === 'aura');
+      document.getElementById('engineGemini').classList.toggle('active', eng === 'gemini');
+      showToast(`Switched inference to ${eng === 'aura' ? 'Aura Diffusion 3.2' : 'Gemini Multimodal Vision'}`, 'info');
+    }
+
+    function toggleAccordion(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.toggle('open');
+      document.getElementById('advChevron').textContent = isOpen ? '▼' : '▶';
+    }
+
+    function updatePromptCount() {
+      const len = document.getElementById('promptInput').value.length;
+      document.getElementById('promptCharCount').textContent = `${len} characters`;
+    }
+
+    function inspirePrompt() {
+      const randomPrompt = INSPIRING_PROMPTS[Math.floor(Math.random() * INSPIRING_PROMPTS.length)];
+      document.getElementById('promptInput').value = randomPrompt;
+      updatePromptCount();
+      showToast('Loaded inspiration prompt!', 'info');
+    }
+
+    function enhancePrompt() {
+      const current = document.getElementById('promptInput').value.trim();
+      if (!current) {
+        inspirePrompt();
+        return;
+      }
+      const enhancements = [
+        ', 8k resolution, volumetric atmospheric haze, award-winning composition, cinematic color grade',
+        ', ray-traced reflections, hyper-detailed textures, masterpiece, dramatic chiaroscuro lighting',
+        ', intricate details, unreal engine 5 render, sharp focus, atmospheric depth'
+      ];
+      const randomEnhance = enhancements[Math.floor(Math.random() * enhancements.length)];
+      document.getElementById('promptInput').value = current + randomEnhance;
+      updatePromptCount();
+      showToast('Aura Magic Enhance applied!', 'success');
+    }
+
+    function randomizeSeed() {
+      const s = Math.floor(Math.random() * 999999);
+      document.getElementById('seedInput').value = s;
+      showToast(`Random seed set to #${s}`, 'info');
+    }
+
+    /* ==========================================================================
+       IMAGE GENERATOR ENGINE (SVG / CANVAS / MULTI-SEED)
+       ========================================================================== */
+    function generateGenerativeVisualUrl(prompt, style, aspect, seed) {
+      // Create high-res responsive procedural art representation using SVG data URI with beautiful gradients
+      const aspectObj = ASPECT_RATIOS.find(a => a.id === aspect) || ASPECT_RATIOS[0];
+      const [wRatio, hRatio] = aspectObj.cssRatio.split('/').map(n => parseInt(n.trim(), 10));
+      const width = 800;
+      const height = Math.round((800 / wRatio) * hRatio);
+
+      // Color palettes tailored by style
+      let c1 = '#4f46e5', c2 = '#7c3aed', c3 = '#ec4899', glow = '#60a5fa';
+      if (style === 'Cyberpunk') {
+        c1 = '#050515'; c2 = '#ff007f'; c3 = '#00f0ff'; glow = '#ffe600';
+      } else if (style === 'Anime') {
+        c1 = '#1e1b4b'; c2 = '#38bdf8'; c3 = '#f472b6'; glow = '#fef08a';
+      } else if (style === 'Oil Painting') {
+        c1 = '#291c10'; c2 = '#854d0e'; c3 = '#ca8a04'; glow = '#d97706';
+      } else if (style === 'Realistic') {
+        c1 = '#0f172a'; c2 = '#334155'; c3 = '#475569'; glow = '#94a3b8';
+      } else if (style === 'Minimalist') {
+        c1 = '#09090b'; c2 = '#18181b'; c3 = '#27272a'; glow = '#e4e4e7';
+      }
+
+      // Generate seed-based geometric & atmospheric motifs
+      const circleCount = 5 + (seed % 6);
+      let circlesSvg = '';
+      for (let i = 0; i < circleCount; i++) {
+        const cx = ((seed * (i + 1) * 73) % 700) + 50;
+        const cy = ((seed * (i + 1) * 97) % (height - 100)) + 50;
+        const r = 60 + ((seed * (i + 1)) % 140);
+        const op = 0.15 + ((i % 4) * 0.1);
+        circlesSvg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#grad_${i % 2})" opacity="${op}" filter="blur(28px)"/>`;
+      }
+
+      // Encode SVG
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+          <defs>
+            <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${c1}"/>
+              <stop offset="50%" stop-color="${c2}"/>
+              <stop offset="100%" stop-color="${c3}"/>
+            </linearGradient>
+            <linearGradient id="grad_0" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="${glow}" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="${c3}" stop-opacity="0.1"/>
+            </linearGradient>
+            <linearGradient id="grad_1" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="${c2}" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="${glow}" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#bgGrad)"/>
+          ${circlesSvg}
+          <g transform="translate(${width/2}, ${height/2})">
+            <polygon points="-70,50 0,-70 70,50" fill="none" stroke="${glow}" stroke-width="2.5" opacity="0.4"/>
+            <circle cx="0" cy="0" r="85" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.35"/>
+          </g>
+          <rect x="24" y="${height - 76}" width="${width - 48}" height="52" rx="12" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.1)"/>
+          <text x="44" y="${height - 44}" fill="#ffffff" font-family="'Inter', system-ui, sans-serif" font-weight="600" font-size="16" letter-spacing="0.5">
+            AuraVision AI • ${style} [${aspect}]
+          </text>
+        </svg>
+      `;
+
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+
+    /* ==========================================================================
+       GENERATION TRIGGER & HANDLER
+       ========================================================================== */
+    async function handleGenerate() {
+      if (isGenerating) return;
+
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        showToast('Please enter a description for your image.', 'danger');
+        document.getElementById('promptInput').focus();
+        return;
+      }
+
+      const credits = getCredits();
+      if (credits <= 0) {
+        showToast('You have used all credits. Upgrade to continue creating!', 'danger');
+        openAuthModal();
+        return;
+      }
+
+      isGenerating = true;
+      updateGenerateBtn(true);
+      renderSkeletons(currentCount);
+
+      // Decrement credits & increment count
+      setCredits(Math.max(0, credits - 1));
+      incrementGenerations(currentCount);
+
+      // Simulate generation delay based on quality
+      const delay = currentQuality === 'Ultra' ? 2400 : currentQuality === 'HD' ? 1600 : 1000;
+      const startTime = performance.now();
+
+      await new Promise(r => setTimeout(r, delay));
+
+      const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
+      const baseSeed = parseInt(document.getElementById('seedInput').value, 10) || Math.floor(Math.random() * 88888);
+
+      const newImages = [];
+      for (let i = 0; i < currentCount; i++) {
+        const seed = baseSeed + i * 17;
+        const imgObj = {
+          id: `img_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 6)}`,
+          url: generateGenerativeVisualUrl(prompt, currentStyle, currentAspect, seed),
+          prompt: prompt,
+          style: currentStyle,
+          aspectRatio: currentAspect,
+          quality: currentQuality,
+          engine: currentEngine === 'aura' ? 'Aura Diffusion 3.2' : 'Gemini Vision',
+          seed: seed,
+          createdAt: new Date().toISOString(),
+          isFavorite: false
+        };
+        newImages.push(imgObj);
+      }
+
+      // Add to session
+      currentSessionImages = [...newImages, ...currentSessionImages];
+
+      // Auto-save generated photos to Saved Library (localStorage)
+      const existing = getStoredCreations();
+      const updated = [...newImages, ...existing].slice(0, 300);
+      saveStoredCreations(updated);
+
+      isGenerating = false;
+      updateGenerateBtn(false);
+
+      // Update UI
+      document.getElementById('stageStatusTitle').textContent = `Generated ${currentCount} Visuals`;
+      document.getElementById('stageStatsText').textContent = `Completed in ${elapsedTime}s with ${currentEngine === 'aura' ? 'Aura 3.2' : 'Gemini'}`;
+
+      renderSessionGrid();
+      updateDashboard();
+      showToast(`Successfully created ${currentCount} visual photo(s)!`, 'success');
+    }
+
+    function updateGenerateBtn(loading) {
+      const btn = document.getElementById('generateBtn');
+      const icon = document.getElementById('btnIcon');
+      const text = document.getElementById('btnText');
+
+      btn.disabled = loading;
+      if (loading) {
+        icon.className = 'spinner';
+        icon.textContent = '';
+        text.textContent = 'Generating Visuals...';
+      } else {
+        icon.className = '';
+        icon.textContent = '✦';
+        text.textContent = 'Generate Visuals';
+      }
+    }
+
+    function renderSkeletons(count) {
+      const grid = document.getElementById('currentSessionGrid');
+      let html = '';
+      for (let i = 0; i < count; i++) {
+        html += `
+          <div class="skeleton-card">
+            <div class="skeleton-preview">
+              <div class="spinner" style="width: 32px; height: 32px; border-width: 3px;"></div>
+              <span style="font-size: 13px; font-weight: 600; color: var(--muted);">Synthesizing Visual...</span>
+              <div class="skeleton-shimmer"></div>
+            </div>
+            <div style="height: 14px; background: var(--surface2); border-radius: 4px; width: 85%;"></div>
+            <div style="height: 12px; background: var(--surface2); border-radius: 4px; width: 45%;"></div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html + grid.innerHTML;
+    }
+
+    /* ==========================================================================
+       RENDER CURRENT SESSION GRID
+       ========================================================================== */
+    function renderSessionGrid() {
+      const grid = document.getElementById('currentSessionGrid');
+      if (currentSessionImages.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon">✦</div>
+            <h3 class="empty-title">Ready for Your Next Creation</h3>
+            <p class="empty-desc">Enter any creative description on the left and select your style to produce stunning AI visuals.</p>
+            <div class="sample-prompts-row">
+              <button class="sample-prompt-chip" onclick="useSamplePrompt('Cyberpunk botanical greenhouse with neon rain')">Cyberpunk greenhouse</button>
+              <button class="sample-prompt-chip" onclick="useSamplePrompt('Astronaut drifting near celestial nebula, 8k cinematic')">Astronaut nebula</button>
+              <button class="sample-prompt-chip" onclick="useSamplePrompt('Anime spirit garden bathed in moonlight with glowing sakura')">Anime spirit garden</button>
+              <button class="sample-prompt-chip" onclick="useSamplePrompt('Octane 3D glass sculpture of a hummingbird')">3D hummingbird</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = currentSessionImages.map(img => createCardHtml(img, 'session')).join('');
+    }
+
+    function useSamplePrompt(p) {
+      document.getElementById('promptInput').value = p;
+      updatePromptCount();
+      handleGenerate();
+    }
+
+    function clearResultsCanvas() {
+      if (currentSessionImages.length === 0) return;
+      currentSessionImages = [];
+      renderSessionGrid();
+      document.getElementById('stageStatusTitle').textContent = 'Creative Canvas';
+      document.getElementById('stageStatsText').textContent = 'Canvas cleared';
+      showToast('Canvas cleared', 'info');
+    }
+
+    /* ==========================================================================
+       CARD HTML TEMPLATE & ACTIONS (WITH DEDICATED DELETE BUTTON)
+       ========================================================================== */
+    function createCardHtml(img, context) {
+      const aspectObj = ASPECT_RATIOS.find(a => a.id === img.aspectRatio) || ASPECT_RATIOS[0];
+
+      return `
+        <div class="image-card" id="card_${img.id}">
+          <div class="image-preview-wrap" style="aspect-ratio: ${aspectObj.cssRatio};">
+            <img src="${img.url}" alt="${escapeHtml(img.prompt)}" loading="lazy">
+            
+            <!-- Hover Overlay -->
+            <div class="image-overlay">
+              <div class="overlay-top">
+                <span class="aspect-badge">${img.aspectRatio}</span>
+                <div class="top-actions">
+                  <!-- DELETE BUTTON -->
+                  <button class="action-icon-btn btn-delete" 
+                          onclick="deletePhoto('${img.id}', '${context}', event)" 
+                          title="Delete photo">
+                    🗑️
+                  </button>
+                  <!-- FAVORITE BUTTON -->
+                  <button class="action-icon-btn ${img.isFavorite ? 'is-fav' : ''}" 
+                          onclick="toggleFavoritePhoto('${img.id}', event)" 
+                          title="${img.isFavorite ? 'Remove from favorites' : 'Add to favorites'}">
+                    ${img.isFavorite ? '❤️' : '🤍'}
+                  </button>
+                </div>
+              </div>
+
+              <div class="overlay-bottom">
+                <button class="btn-secondary" style="background: rgba(0,0,0,0.6); color: #fff; border-color: rgba(255,255,255,0.2);"
+                        onclick="openLightbox('${img.id}', '${context}')">
+                  🔍 View Full
+                </button>
+                <div style="display: flex; gap: 4px;">
+                  <button class="action-icon-btn" onclick="downloadImageDirect('${img.id}', event)" title="Download Photo">
+                    ⬇️
+                  </button>
+                  <button class="action-icon-btn" onclick="remixPhoto('${img.id}', event)" title="Remix Prompt">
+                    🎨
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-info">
+            <p class="card-prompt" title="${escapeHtml(img.prompt)}">${escapeHtml(img.prompt)}</p>
+            <div class="card-meta-row">
+              <div class="card-tags">
+                <span class="tag-badge">${img.style}</span>
+                <span class="tag-badge">${img.quality || 'HD'}</span>
+              </div>
+              <span>${formatTimestamp(img.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       DELETE PHOTO ACTION (AS REQUESTED)
+       ========================================================================== */
+    function deletePhoto(id, context, event) {
+      if (event) event.stopPropagation();
+
+      // 1. Remove from stored library in localStorage
+      const stored = getStoredCreations();
+      const updated = stored.filter(item => item.id !== id);
+      saveStoredCreations(updated);
+
+      // 2. Remove from current session if present
+      currentSessionImages = currentSessionImages.filter(item => item.id !== id);
+
+      // 3. Close lightbox if active photo is this one
+      if (activeLightboxImage && activeLightboxImage.id === id) {
+        closeLightbox();
+      }
+
+      // 4. Update UI grids
+      renderSessionGrid();
+      renderCreations();
+      updateDashboard();
+
+      // 5. Provide immediate feedback
+      showToast('Saved photo deleted.', 'danger');
+    }
+
+    function toggleFavoritePhoto(id, event) {
+      if (event) event.stopPropagation();
+
+      const stored = getStoredCreations();
+      let nowFav = false;
+      const updated = stored.map(item => {
+        if (item.id === id) {
+          nowFav = !item.isFavorite;
+          return { ...item, isFavorite: nowFav };
+        }
+        return item;
+      });
+      saveStoredCreations(updated);
+
+      // Sync session images
+      currentSessionImages = currentSessionImages.map(item => {
+        if (item.id === id) return { ...item, isFavorite: nowFav };
+        return item;
+      });
+
+      renderSessionGrid();
+      renderCreations();
+      updateDashboard();
+
+      showToast(nowFav ? 'Added to favorites ❤️' : 'Removed from favorites', 'info');
+    }
+
+    function remixPhoto(id, event) {
+      if (event) event.stopPropagation();
+      const allPhotos = [...currentSessionImages, ...getStoredCreations(), ...CURATED_EXPLORE];
+      const target = allPhotos.find(p => p.id === id);
+      if (!target) return;
+
+      document.getElementById('promptInput').value = target.prompt;
+      updatePromptCount();
+      if (target.style) selectStyle(target.style);
+      if (target.aspectRatio) selectAspect(target.aspectRatio);
+
+      switchTab('studio');
+      showToast('Loaded prompt into studio canvas!', 'info');
+    }
+
+    function downloadImageDirect(id, event) {
+      if (event) event.stopPropagation();
+      const allPhotos = [...currentSessionImages, ...getStoredCreations(), ...CURATED_EXPLORE];
+      const target = allPhotos.find(p => p.id === id);
+      if (!target) return;
+
+      triggerDownload(target.url, `auravision-${target.id}.png`);
+      showToast('Downloading image...', 'success');
+    }
+
+    function triggerDownload(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /* ==========================================================================
+       MY CREATIONS TAB (SAVED PHOTOS MANAGEMENT)
+       ========================================================================== */
+    function setCreationFilter(f) {
+      creationFilter = f;
+      document.querySelectorAll('#creationFilterChips .filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(f));
+      });
+      renderCreations();
+    }
+
+    function renderCreations() {
+      const allSaved = getStoredCreations();
+      document.getElementById('creationsCountBadge').textContent = allSaved.length;
+      document.getElementById('totalSavedBadge').textContent = `${allSaved.length} saved photos`;
+
+      const search = (document.getElementById('creationsSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = allSaved.filter(img => {
+        let matchFilter = true;
+        if (creationFilter === 'Favorites') matchFilter = img.isFavorite;
+        else if (creationFilter !== 'All') matchFilter = img.style === creationFilter;
+
+        let matchSearch = true;
+        if (search) {
+          matchSearch = (img.prompt || '').toLowerCase().includes(search) ||
+                        (img.style || '').toLowerCase().includes(search);
+        }
+        return matchFilter && matchSearch;
+      });
+
+      const grid = document.getElementById('savedCreationsGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon">🖼️</div>
+            <h3 class="empty-title">${allSaved.length === 0 ? 'No Saved Photos Yet' : 'No Matching Photos Found'}</h3>
+            <p class="empty-desc">
+              ${allSaved.length === 0 
+                ? 'All images generated in the studio are automatically saved here for you to organize, inspect, and export.' 
+                : 'Try adjusting your search query or filter chips.'}
+            </p>
+            ${allSaved.length === 0 ? `<button class="btn-generate" onclick="switchTab('studio')" style="max-width: 220px;">Open Studio</button>` : ''}
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(img => createCardHtml(img, 'creations')).join('');
+    }
+
+    function openClearAllModal() {
+      const all = getStoredCreations();
+      if (all.length === 0) {
+        showToast('Your library is already empty.', 'info');
+        return;
+      }
+      document.getElementById('clearAllModal').classList.add('open');
+    }
+
+    function closeClearAllModal() {
+      document.getElementById('clearAllModal').classList.remove('open');
+    }
+
+    function confirmClearAll() {
+      saveStoredCreations([]);
+      currentSessionImages = [];
+      closeClearAllModal();
+      renderCreations();
+      renderSessionGrid();
+      updateDashboard();
+      showToast('All saved photos removed.', 'danger');
+    }
+
+    /* ==========================================================================
+       EXPLORE GALLERY TAB
+       ========================================================================== */
+    function renderExploreGallery() {
+      const grid = document.getElementById('exploreGalleryGrid');
+      grid.innerHTML = CURATED_EXPLORE.map(item => {
+        const url = generateGenerativeVisualUrl(item.prompt, item.style, item.aspectRatio, item.seed);
+        const imgObj = { ...item, url, isFavorite: false, createdAt: new Date().toISOString() };
+        return createCardHtml(imgObj, 'explore');
+      }).join('');
+    }
+
+    /* ==========================================================================
+       DASHBOARD & STATS
+       ========================================================================== */
+    function updateDashboard() {
+      const saved = getStoredCreations();
+      document.getElementById('dashSavedCount').textContent = saved.length;
+      document.getElementById('creationsCountBadge').textContent = saved.length;
+
+      const recentList = document.getElementById('dashRecentActivityList');
+      if (saved.length === 0) {
+        recentList.innerHTML = `<p style="font-size: 13px; color: var(--muted);">No recent generations yet.</p>`;
+        return;
+      }
+
+      recentList.innerHTML = saved.slice(0, 5).map(item => `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--line); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+            <img src="${item.url}" style="width: 38px; height: 38px; border-radius: 6px; object-fit: cover;">
+            <div style="overflow: hidden;">
+              <p style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;">${escapeHtml(item.prompt)}</p>
+              <span style="font-size: 11px; color: var(--muted);">${item.style} • ${item.aspectRatio}</span>
+            </div>
+          </div>
+          <button class="btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="openLightbox('${item.id}', 'dashboard')">Inspect</button>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       LIGHTBOX / INSPECTOR MODAL
+       ========================================================================== */
+    function openLightbox(id, context) {
+      const allPhotos = [...currentSessionImages, ...getStoredCreations(), ...CURATED_EXPLORE];
+      const target = allPhotos.find(p => p.id === id);
+      if (!target) return;
+
+      activeLightboxImage = target;
+
+      document.getElementById('lightboxImg').src = target.url;
+      document.getElementById('lightboxPrompt').textContent = target.prompt;
+
+      const badges = document.getElementById('lightboxBadges');
+      badges.innerHTML = `
+        <span class="tag-badge">${target.style || 'Cinematic'}</span>
+        <span class="tag-badge">${target.aspectRatio || '1:1'}</span>
+        <span class="tag-badge">${target.quality || 'HD'}</span>
+        <span class="tag-badge">${target.engine || 'Aura 3.2'}</span>
+      `;
+
+      document.getElementById('lightboxModal').classList.add('open');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.remove('open');
+      activeLightboxImage = null;
+    }
+
+    function copyLightboxPrompt() {
+      if (!activeLightboxImage) return;
+      navigator.clipboard.writeText(activeLightboxImage.prompt);
+      showToast('Prompt copied to clipboard!', 'success');
+    }
+
+    function downloadLightboxImage() {
+      if (!activeLightboxImage) return;
+      triggerDownload(activeLightboxImage.url, `auravision-${activeLightboxImage.id}.png`);
+      showToast('Downloading image...', 'success');
+    }
+
+    function remixLightboxPrompt() {
+      if (!activeLightboxImage) return;
+      const id = activeLightboxImage.id;
+      closeLightbox();
+      remixPhoto(id);
+    }
+
+    function deleteLightboxPhoto() {
+      if (!activeLightboxImage) return;
+      const id = activeLightboxImage.id;
+      deletePhoto(id, 'lightbox');
+    }
+
+    /* ==========================================================================
+       AUTH MODAL
+       ========================================================================== */
+    function openAuthModal() {
+      document.getElementById('authModal').classList.add('open');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('open');
+    }
+
+    function simulatedGoogleLogin() {
+      closeAuthModal();
+      setCredits(50);
+      document.getElementById('navUserName').textContent = 'Google Artist';
+      document.getElementById('navUserAvatar').textContent = 'G';
+      showToast('Signed in with Google! +25 bonus credits added.', 'success');
+    }
+
+    function handleEmailLogin() {
+      const email = document.getElementById('authEmailInput').value.trim();
+      if (!email) {
+        showToast('Please enter an email.', 'danger');
+        return;
+      }
+      closeAuthModal();
+      const name = email.split('@')[0];
+      document.getElementById('navUserName').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+      document.getElementById('navUserAvatar').textContent = name.charAt(0).toUpperCase();
+      showToast(`Welcome back, ${name}!`, 'success');
+    }
+
+    /* ==========================================================================
+       TOAST SYSTEM
+       ========================================================================== */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'danger') icon = '🗑️';
+
+      toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.2s ease';
+        setTimeout(() => toast.remove(), 200);
+      }, 3200);
+    }
+
+    /* ==========================================================================
+       UTILITIES
+       ========================================================================== */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+    }
+
+    function formatTimestamp(iso) {
+      if (!iso) return 'Just now';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return 'Recently';
+      }
+    }
+  </script>
 </body>
+
 </html>

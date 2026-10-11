@@ -1519,8 +1519,8 @@
                 <button class="tool-btn-sm" onclick="inspirePrompt()" title="Generate random inspiration prompt">
                   🎲 Inspire
                 </button>
-                <button class="tool-btn-sm" onclick="enhancePrompt()" title="Enrich prompt with cinematic details">
-                  ✨ Magic Enhance
+                <button class="tool-btn-sm" onclick="enhancePrompt()" title="Rewrite this prompt with Gemini 3.8 Flash">
+                  ✨ Gemini 3.8 Enhance
                 </button>
               </div>
             </div>
@@ -2150,21 +2150,49 @@
       showToast('Loaded inspiration prompt!', 'info');
     }
 
-    function enhancePrompt() {
-      const current = document.getElementById('promptInput').value.trim();
+    async function enhancePrompt() {
+      const input = document.getElementById('promptInput');
+      const current = input.value.trim();
       if (!current) {
-        inspirePrompt();
+        showToast('Enter an image description first, then use Gemini 3.8 Enhance.', 'danger');
+        input.focus();
         return;
       }
-      const enhancements = [
-        ', 8k resolution, volumetric atmospheric haze, award-winning composition, cinematic color grade',
-        ', ray-traced reflections, hyper-detailed textures, masterpiece, dramatic chiaroscuro lighting',
-        ', intricate details, unreal engine 5 render, sharp focus, atmospheric depth'
-      ];
-      const randomEnhance = enhancements[Math.floor(Math.random() * enhancements.length)];
-      document.getElementById('promptInput').value = current + randomEnhance;
-      updatePromptCount();
-      showToast('Aura Magic Enhance applied!', 'success');
+
+      const button = document.querySelector('button[onclick="enhancePrompt()"]');
+      const originalButtonHtml = button ? button.innerHTML : '';
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '⏳ Gemini 3.8…';
+      }
+
+      try {
+        const response = await fetch('/api/prompt-assistant/enhance', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ prompt: current })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || data.error || `Prompt enhancement failed (HTTP ${response.status}).`);
+        }
+
+        const enhanced = typeof data.enhancedPrompt === 'string' ? data.enhancedPrompt.trim() : '';
+        if (!enhanced) throw new Error('Gemini 3.8 returned an empty prompt. Please try again.');
+
+        input.value = enhanced;
+        updatePromptCount();
+        showToast('Prompt enhanced with Gemini 3.8 Flash.', 'success');
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'Gemini 3.8 prompt enhancement failed.', 'danger');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = originalButtonHtml;
+        }
+      }
     }
 
     function randomizeSeed() {

@@ -24,17 +24,50 @@ public class GeminiClient {
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .connectTimeout(Duration.ofSeconds(20)).build();
     private final ObjectMapper om;
-    private final String apiKey, imageModel, videoModel;
+    private final String apiKey, imageModel, videoModel, textModel;
 
     public GeminiClient(ObjectMapper om,
                         @Value("${gemini.api-key}") String apiKey,
                         @Value("${gemini.image-model}") String imageModel,
-                        @Value("${gemini.video-model}") String videoModel) {
+                        @Value("${gemini.video-model}") String videoModel,
+                        @Value("${gemini.text-model:gemini-3.8-flash}") String textModel) {
         this.om = om; this.apiKey = apiKey; this.imageModel = imageModel; this.videoModel = videoModel;
+        this.textModel = textModel;
     }
 
     public String imageModel() { return imageModel; }
     public String videoModel() { return videoModel; }
+    public String textModel() { return textModel; }
+
+    // ---------- text prompt enhancement ----------
+    public String enhanceImagePrompt(String prompt) throws Exception {
+        String instruction = """
+                Rewrite the user's image prompt into a clear, vivid, production-ready prompt for an image generation model.
+                Preserve the original subject, intent, and any named details. Improve composition, lighting, camera/lens language,
+                environment, materials, color, and style only where useful. Do not change the subject or add contradictory details.
+                Return only the improved prompt, with no preamble, explanation, quotes, or markdown.
+                Keep the result under 1,400 characters.
+
+                User prompt:
+                """ + prompt;
+
+        ObjectNode body = om.createObjectNode();
+        body.putArray("contents").addObject().putArray("parts").addObject().put("text", instruction);
+        JsonNode res = post(textModel + ":generateContent", body);
+        StringBuilder result = new StringBuilder();
+        for (JsonNode part : res.path("candidates").path(0).path("content").path("parts")) {
+            if (part.hasNonNull("text")) result.append(part.path("text").asText());
+        }
+        String enhanced = result.toString().trim();
+        if (enhanced.isEmpty()) {
+            String reason = res.path("promptFeedback").path("blockReason").asText("");
+            throw new IllegalStateException(reason.isEmpty()
+                    ? "Gemini 3.8 Flash returned no improved prompt."
+                    : "Gemini could not enhance this prompt because it was blocked: " + reason);
+        }
+        if (enhanced.length() > 1450) enhanced = enhanced.substring(0, 1450).trim();
+        return enhanced;
+    }
 
     // ---------- images ----------
     public Media generateImage(String prompt, String aspectRatio) throws Exception {

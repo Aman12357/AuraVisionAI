@@ -28,9 +28,9 @@ public class GenerationWorker {
             g.setStatus(Generation.Status.RUNNING);
             GeminiClient.Media media;
             if (g.getType() == Generation.Type.IMAGE) {
-                g.setModel(gemini.imageModel());
+                if (g.getModel() == null || g.getModel().isBlank()) g.setModel(gemini.imageModel());
                 repo.save(g);
-                media = gemini.generateImage(g.getPrompt(), g.getAspectRatio());
+                media = gemini.generateImage(g.getPrompt(), g.getAspectRatio(), g.getModel());
             } else {
                 g.setModel(gemini.videoModel());
                 g.setOperationName(gemini.startVideo(g.getPrompt(), g.getAspectRatio()));

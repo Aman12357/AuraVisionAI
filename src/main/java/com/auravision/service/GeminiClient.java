@@ -41,7 +41,7 @@ public class GeminiClient {
         ObjectNode body = om.createObjectNode();
         body.putArray("contents").addObject().putArray("parts").addObject().put("text", prompt);
         body.putObject("generationConfig").putArray("responseModalities").add("TEXT").add("IMAGE");
-        body.path("generationConfig").putObject("imageConfig").put("aspectRatio", aspectRatio);
+        ((ObjectNode) body.path("generationConfig")).putObject("imageConfig").put("aspectRatio", aspectRatio);
 
         JsonNode res = post(imageModel + ":generateContent", body);
         for (JsonNode part : res.path("candidates").path(0).path("content").path("parts")) {

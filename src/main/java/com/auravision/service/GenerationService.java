@@ -24,6 +24,11 @@ public class GenerationService {
     private static final List<Generation.Status> ACTIVE = List.of(Generation.Status.PENDING, Generation.Status.RUNNING);
     private static final Set<String> IMAGE_RATIOS = Set.of("1:1", "16:9", "9:16", "4:3", "3:4");
     private static final Set<String> VIDEO_RATIOS = Set.of("16:9", "9:16");
+    private static final Set<String> IMAGE_MODELS = Set.of(
+            "gemini-3-pro-image",
+            "gemini-3.1-flash-image",
+            "gemini-3.1-flash-lite-image"
+    );
 
     public record Usage(Plan plan, int imagesLeft, int videosLeft, Instant expiresAt) {}
 
@@ -32,7 +37,12 @@ public class GenerationService {
     private final BillingService billing;
     @Value("${app.max-active-jobs}") private int maxActive;
 
-    public Generation submit(String owner, Generation.Type type, String prompt, String ratio) {
+    public Generation submit(String owner, Generation.Type type, String prompt, String ratio, String requestedModel) {
+        String selectedModel = type == Generation.Type.IMAGE
+                ? (requestedModel == null || requestedModel.isBlank() ? "gemini-3.1-flash-image" : requestedModel.trim())
+                : null;
+        if (type == Generation.Type.IMAGE && !IMAGE_MODELS.contains(selectedModel))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image model. Choose Nano Banana Pro, Nano Banana 2, or Nano Banana 2 Lite.");
         if (repo.countByOwnerTokenAndStatusIn(owner, ACTIVE) >= maxActive)
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "You already have " + maxActive + " generations in progress. Wait for one to finish.");
@@ -50,6 +60,7 @@ public class GenerationService {
         g.setType(type);
         g.setPrompt(prompt.trim());
         g.setAspectRatio(normalise(type, ratio));
+        if (type == Generation.Type.IMAGE) g.setModel(selectedModel);
         g = repo.save(g);
         worker.process(g.getId());
         return g;

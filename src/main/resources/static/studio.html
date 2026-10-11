@@ -57,6 +57,15 @@ textarea:focus,select:focus{outline:none;border-color:var(--blue)}
     <label for="p">Describe what you want</label>
     <textarea id="p" maxlength="1500" placeholder="A neon-lit street in the rain, cinematic, shallow depth of field"></textarea>
     <div class="count"><span id="c">0</span>/1500</div>
+    <div id="modelBox">
+      <label for="model">Image model</label>
+      <select id="model" aria-describedby="modelHelp">
+        <option value="gemini-3-pro-image">Nano Banana Pro · Highest quality</option>
+        <option value="gemini-3.1-flash-image" selected>Nano Banana 2 · Recommended</option>
+        <option value="gemini-3.1-flash-lite-image">Nano Banana 2 Lite · Faster, lower cost</option>
+      </select>
+      <p class="hint" id="modelHelp">Choose the image model for this generation.</p>
+    </div>
     <label for="a">Aspect ratio</label>
     <select id="a"></select>
     <button class="go" id="go" type="submit">Generate photo</button>
@@ -71,6 +80,7 @@ let type='IMAGE', timer=null;
 const RATIOS={IMAGE:['1:1','16:9','9:16','4:3','3:4'],VIDEO:['16:9','9:16']};
 function setType(t){
   type=t;
+  $('#modelBox').hidden=t!=='IMAGE';
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   $('#a').innerHTML=RATIOS[t].map(r=>`<option>${r}</option>`).join('');
   $('#go').textContent=t==='IMAGE'?'Generate photo':'Generate video';
@@ -86,7 +96,7 @@ $('#f').addEventListener('submit',async e=>{
   if(!prompt){$('#m').textContent='Enter a prompt first.';return}
   $('#go').disabled=true;
   try{
-    const r=await fetch('/api/generations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,prompt,aspectRatio:$('#a').value})});
+    const r=await fetch('/api/generations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,prompt,aspectRatio:$('#a').value,model:type==='IMAGE'?$('#model').value:null})});
     if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||j.error||'Request failed ('+r.status+')')}
     $('#p').value='';$('#c').textContent='0';
     await Promise.all([load(),loadMe()]);
@@ -111,11 +121,12 @@ function render(items){
     else{m.innerHTML='<div><div class="spin"></div>'+(i.type==='VIDEO'?'Rendering video. This can take a few minutes.':'Creating your photo…')+'</div>'}
     const meta=document.createElement('div'); meta.className='meta';
     const p=document.createElement('p'); p.textContent=i.prompt; p.title=i.prompt;
+    const model=document.createElement('small'); model.style.color='var(--muted)'; model.textContent=i.model||'';
     const acts=document.createElement('div'); acts.className='acts';
     if(i.status==='DONE'){const d=document.createElement('a');d.href=i.mediaUrl+'?download=true';d.textContent='Download';acts.appendChild(d)}
     const del=document.createElement('button'); del.className='del'; del.textContent='Delete';
     del.onclick=async()=>{await fetch('/api/generations/'+i.id,{method:'DELETE'});load()};
-    acts.appendChild(del); meta.append(p,acts); c.append(m,meta); g.appendChild(c);
+    acts.appendChild(del); meta.append(p); if(model.textContent) meta.append(model); meta.append(acts); c.append(m,meta); g.appendChild(c);
   });
   const busy=items.some(i=>i.status==='PENDING'||i.status==='RUNNING');
   clearTimeout(timer); if(busy) timer=setTimeout(load,3000);

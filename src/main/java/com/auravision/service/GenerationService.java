@@ -25,6 +25,7 @@ public class GenerationService {
     private static final Set<String> IMAGE_RATIOS = Set.of("1:1", "16:9", "9:16", "4:3", "3:4");
     private static final Set<String> VIDEO_RATIOS = Set.of("16:9", "9:16");
     private static final Set<String> IMAGE_MODELS = Set.of(
+            CloudflareImageClient.MODEL_KEY,
             "gemini-3-pro-image",
             "gemini-3.1-flash-image",
             "gemini-3.1-flash-lite-image"
@@ -39,10 +40,10 @@ public class GenerationService {
 
     public Generation submit(String owner, Generation.Type type, String prompt, String ratio, String requestedModel) {
         String selectedModel = type == Generation.Type.IMAGE
-                ? (requestedModel == null || requestedModel.isBlank() ? "gemini-3.1-flash-image" : requestedModel.trim())
+                ? (requestedModel == null || requestedModel.isBlank() ? CloudflareImageClient.MODEL_KEY : requestedModel.trim())
                 : null;
         if (type == Generation.Type.IMAGE && !IMAGE_MODELS.contains(selectedModel))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image model. Choose Nano Banana Pro, Nano Banana 2, or Nano Banana 2 Lite.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image model. Choose Cloudflare FLUX.1 Schnell or one of the available Gemini image models.");
         if (repo.countByOwnerTokenAndStatusIn(owner, ACTIVE) >= maxActive)
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "You already have " + maxActive + " generations in progress. Wait for one to finish.");

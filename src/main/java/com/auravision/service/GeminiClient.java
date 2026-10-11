@@ -38,12 +38,16 @@ public class GeminiClient {
 
     // ---------- images ----------
     public Media generateImage(String prompt, String aspectRatio) throws Exception {
+        return generateImage(prompt, aspectRatio, imageModel);
+    }
+
+    public Media generateImage(String prompt, String aspectRatio, String selectedModel) throws Exception {
         ObjectNode body = om.createObjectNode();
         body.putArray("contents").addObject().putArray("parts").addObject().put("text", prompt);
         body.putObject("generationConfig").putArray("responseModalities").add("TEXT").add("IMAGE");
         ((ObjectNode) body.path("generationConfig")).putObject("imageConfig").put("aspectRatio", aspectRatio);
 
-        JsonNode res = post(imageModel + ":generateContent", body);
+        JsonNode res = post(selectedModel + ":generateContent", body);
         for (JsonNode part : res.path("candidates").path(0).path("content").path("parts")) {
             JsonNode inline = part.has("inlineData") ? part.get("inlineData") : part.path("inline_data");
             if (inline.has("data")) {

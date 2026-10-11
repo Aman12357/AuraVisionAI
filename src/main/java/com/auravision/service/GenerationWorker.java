@@ -18,6 +18,7 @@ import java.nio.file.Path;
 public class GenerationWorker {
     private final GenerationRepository repo;
     private final GeminiClient gemini;
+    private final CloudflareImageClient cloudflare;
     @Value("${app.storage-dir}") private String storageDir;
 
     @Async
@@ -28,9 +29,13 @@ public class GenerationWorker {
             g.setStatus(Generation.Status.RUNNING);
             GeminiClient.Media media;
             if (g.getType() == Generation.Type.IMAGE) {
-                if (g.getModel() == null || g.getModel().isBlank()) g.setModel(gemini.imageModel());
+                if (g.getModel() == null || g.getModel().isBlank()) g.setModel(CloudflareImageClient.MODEL_KEY);
                 repo.save(g);
-                media = gemini.generateImage(g.getPrompt(), g.getAspectRatio(), g.getModel());
+                if (CloudflareImageClient.MODEL_KEY.equals(g.getModel())) {
+                    media = cloudflare.generateImage(g.getPrompt(), g.getAspectRatio());
+                } else {
+                    media = gemini.generateImage(g.getPrompt(), g.getAspectRatio(), g.getModel());
+                }
             } else {
                 g.setModel(gemini.videoModel());
                 g.setOperationName(gemini.startVideo(g.getPrompt(), g.getAspectRatio()));

@@ -26,7 +26,7 @@ public class GenerationController {
 
     public record CreateRequest(@NotNull Generation.Type type,
                                 @NotBlank @Size(max = 1500) String prompt,
-                                String aspectRatio) {}
+                                String aspectRatio, String model) {}
 
     /** What the browser sees. File paths and operation ids stay on the server. */
     public record View(Long id, Generation.Type type, String prompt, String aspectRatio, String model,
@@ -41,7 +41,7 @@ public class GenerationController {
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public View create(@RequestAttribute(OwnerFilter.ATTR) String owner, @Valid @RequestBody CreateRequest req) {
-        return View.of(service.submit(owner, req.type(), req.prompt(), req.aspectRatio()));
+        return View.of(service.submit(owner, req.type(), req.prompt(), req.aspectRatio(), req.model()));
     }
 
     @GetMapping

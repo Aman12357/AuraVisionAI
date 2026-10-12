@@ -1484,7 +1484,7 @@
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
           🌓
         </button>
-        <button class="user-profile-btn" onclick="openAuthModal()" title="Account & Plan">
+        <button class="user-profile-btn" onclick="window.location.href='/account.html'" title="Account & Plan">
           <div class="user-avatar" id="navUserAvatar">A</div>
           <span class="user-name" id="navUserName">Artist</span>
         </button>
@@ -1757,7 +1757,7 @@
             <li>✓ Private cloud synchronization</li>
             <li>✓ Custom LoRA style models</li>
           </ul>
-          <button class="btn-generate" onclick="alert('Upgrading feature simulation! Enjoy unlimited creations.')">
+          <button class="btn-generate" onclick="window.location.href='/account.html?upgrade=true'">
             Upgrade to Pro — $19/mo
           </button>
         </div>
@@ -1959,9 +1959,76 @@
     /* ==========================================================================
        STORAGE HELPERS
        ========================================================================== */
+    let accountStorageScope = 'visitor';
+    let activeAccount = { authenticated: false, email: null, storageKey: 'visitor' };
+
+    function storageKey(name) {
+      return 'auravision_' + String(accountStorageScope).replace(/[^A-Za-z0-9_-]/g, '_') + '_' + name;
+    }
+
+    async function loadActiveAccount() {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+        if (response.ok) activeAccount = await response.json();
+      } catch (error) {
+        activeAccount = { authenticated: false, email: null, storageKey: 'visitor' };
+      }
+      accountStorageScope = activeAccount.storageKey || 'visitor';
+      const nameEl = document.getElementById('navUserName');
+      const avatarEl = document.getElementById('navUserAvatar');
+      if (nameEl) nameEl.textContent = activeAccount.authenticated && activeAccount.email
+        ? activeAccount.email.split('@')[0] : 'Sign in';
+      if (avatarEl) avatarEl.textContent = activeAccount.authenticated && activeAccount.email
+        ? activeAccount.email.charAt(0).toUpperCase() : 'A';
+      if (activeAccount.authenticated && Number.isFinite(Number(activeAccount.imagesLeft))) {
+        localStorage.setItem(storageKey('aura_credits'), String(activeAccount.imagesLeft));
+      }
+    }
+
+    async function syncRemoteCreations() {
+      if (!activeAccount.authenticated) return;
+      try {
+        const response = await fetch('/api/generations', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+        if (!response.ok) return;
+        const jobs = await response.json();
+        const remote = jobs.filter(job => job.type === 'IMAGE' && job.status === 'DONE').map(job => ({
+          id: 'server_' + job.id,
+          serverId: String(job.id),
+          url: job.mediaUrl || ('/api/generations/' + encodeURIComponent(job.id) + '/media'),
+          prompt: job.prompt || '',
+          style: currentStyle,
+          aspectRatio: job.aspectRatio || currentAspect,
+          quality: currentQuality,
+          engine: 'AuraVision AI',
+          model: job.model || 'cloudflare-flux-schnell',
+          seed: 0,
+          createdAt: job.createdAt || new Date().toISOString(),
+          isFavorite: false
+        }));
+        const stored = getStoredCreations();
+        const byServerId = new Map(stored.filter(item => item.serverId).map(item => [String(item.serverId), item]));
+        const mergedRemote = remote.map(item => {
+          const previous = byServerId.get(String(item.serverId));
+          return previous ? Object.assign({}, item, {
+            isFavorite: !!previous.isFavorite,
+            style: previous.style || item.style,
+            quality: previous.quality || item.quality,
+            seed: previous.seed || item.seed
+          }) : item;
+        });
+        const remoteIds = new Set(mergedRemote.map(item => String(item.serverId)));
+        const merged = mergedRemote.concat(stored.filter(item =>
+          !item.serverId || !remoteIds.has(String(item.serverId)))).slice(0, 300);
+        saveStoredCreations(merged);
+        currentSessionImages = merged.slice(0, 12);
+      } catch (error) {
+        console.warn('Could not sync account creations from the server.', error);
+      }
+    }
+
     function getStoredCreations() {
       try {
-        const stored = localStorage.getItem('aura_creations');
+        const stored = localStorage.getItem(storageKey('aura_creations'));
         return stored ? JSON.parse(stored) : [];
       } catch (e) {
         return [];
@@ -1970,38 +2037,39 @@
 
     function saveStoredCreations(list) {
       try {
-        localStorage.setItem('aura_creations', JSON.stringify(list));
+        localStorage.setItem(storageKey('aura_creations'), JSON.stringify(list));
       } catch (e) {
         console.error('Storage error', e);
       }
     }
 
     function getCredits() {
-      const stored = localStorage.getItem('aura_credits');
+      const stored = localStorage.getItem(storageKey('aura_credits'));
       return stored ? parseInt(stored, 10) : 25;
     }
 
     function setCredits(val) {
-      localStorage.setItem('aura_credits', val);
+      localStorage.setItem(storageKey('aura_credits'), val);
       document.getElementById('creditsCount').textContent = val;
       document.getElementById('dashCredits').textContent = val;
     }
 
     function getTotalGenerations() {
-      const stored = localStorage.getItem('aura_gen_count');
+      const stored = localStorage.getItem(storageKey('aura_gen_count'));
       return stored ? parseInt(stored, 10) : 0;
     }
 
     function incrementGenerations(count) {
       const newVal = getTotalGenerations() + count;
-      localStorage.setItem('aura_gen_count', newVal);
+      localStorage.setItem(storageKey('aura_gen_count'), newVal);
       document.getElementById('dashTotalGen').textContent = newVal;
     }
 
     /* ==========================================================================
        INITIALIZATION
        ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadActiveAccount();
       initTheme();
       renderStyleGrid();
       renderAspectPills();
@@ -2009,24 +2077,21 @@
       setCredits(getCredits());
       document.getElementById('dashTotalGen').textContent = getTotalGenerations();
 
-      // Check if URL has prompt query (from index.html explore links)
       const urlParams = new URLSearchParams(window.location.search);
       const queryPrompt = urlParams.get('prompt');
       if (queryPrompt) {
-        document.getElementById('promptInput').value = decodeURIComponent(queryPrompt);
+        document.getElementById('promptInput').value = queryPrompt;
         updatePromptCount();
       }
 
+      await syncRemoteCreations();
       renderSessionGrid();
       renderCreations();
       renderExploreGallery();
       updateDashboard();
 
-      // Keyboard shortcut: Ctrl+Enter or Cmd+Enter
       window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          handleGenerate();
-        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
         if (e.key === 'Escape') {
           closeLightbox();
           closeAuthModal();
@@ -2276,6 +2341,10 @@
        ========================================================================== */
     async function handleGenerate() {
       if (isGenerating) return;
+      if (!activeAccount.authenticated) {
+        window.location.href = '/account.html?mode=register&redirect=%2Fstudio.html';
+        return;
+      }
 
       const prompt = document.getElementById('promptInput').value.trim();
       if (!prompt) {
@@ -2795,7 +2864,7 @@
        AUTH MODAL
        ========================================================================== */
     function openAuthModal() {
-      document.getElementById('authModal').classList.add('open');
+      window.location.href = '/account.html';
     }
 
     function closeAuthModal() {
@@ -2803,24 +2872,11 @@
     }
 
     function simulatedGoogleLogin() {
-      closeAuthModal();
-      setCredits(50);
-      document.getElementById('navUserName').textContent = 'Google Artist';
-      document.getElementById('navUserAvatar').textContent = 'G';
-      showToast('Signed in with Google! +25 bonus credits added.', 'success');
+      window.location.href = '/account.html';
     }
 
     function handleEmailLogin() {
-      const email = document.getElementById('authEmailInput').value.trim();
-      if (!email) {
-        showToast('Please enter an email.', 'danger');
-        return;
-      }
-      closeAuthModal();
-      const name = email.split('@')[0];
-      document.getElementById('navUserName').textContent = name.charAt(0).toUpperCase() + name.slice(1);
-      document.getElementById('navUserAvatar').textContent = name.charAt(0).toUpperCase();
-      showToast(`Welcome back, ${name}!`, 'success');
+      window.location.href = '/account.html?mode=login';
     }
 
     /* ==========================================================================

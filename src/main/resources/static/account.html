@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manage your AuraVision AI account, subscription and billing history.">
+  <title>My Account · AuraVision AI</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0d12; --surface:#151821; --surface2:#1d212c; --text:#f1f3f8; --muted:#a3a9b8; --line:#2a2f3c; --blue:#7aa7ff; --good:#34d399; --warn:#fbbf24; --bad:#fb7185; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 "Google Sans Flex","DM Sans",system-ui,sans-serif; }
+    a { color:inherit; }
+    header { border-bottom:1px solid var(--line); background:rgba(11,13,18,.94); }
+    .nav { width:min(1100px,calc(100% - 36px)); margin:auto; min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-.03em; }
+    .navlinks { display:flex; align-items:center; gap:18px; }
+    .navlinks a { color:var(--muted); text-decoration:none; font-size:14px; }
+    .wrap { width:min(1000px,calc(100% - 36px)); margin:38px auto 70px; }
+    .eyebrow { color:var(--blue); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:.12em; }
+    h1 { font-size:clamp(32px,5vw,44px); line-height:1.1; margin:8px 0 10px; letter-spacing:-.04em; }
+    h2 { font-size:22px; margin:0 0 10px; }
+    h3 { font-size:17px; margin:0 0 5px; }
+    p { margin:0 0 14px; }
+    .muted { color:var(--muted); }
+    .small { font-size:13px; }
+    .panel { border:1px solid var(--line); background:var(--surface); border-radius:18px; padding:24px; margin-top:20px; }
+    .auth-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr); gap:20px; align-items:start; }
+    .field { margin-top:14px; }
+    label { display:block; margin-bottom:6px; color:var(--muted); font-size:13px; }
+    input { width:100%; border:1px solid var(--line); background:#0f121a; color:var(--text); border-radius:10px; padding:12px 13px; font:inherit; outline:none; }
+    input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(122,167,255,.13); }
+    button,.button { border:0; border-radius:10px; padding:11px 15px; background:var(--blue); color:#0b0d12; cursor:pointer; font:inherit; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+    button.secondary,.button.secondary { background:transparent; border:1px solid var(--line); color:var(--text); }
+    button.danger { color:#ffe4e6; background:#3b1721; border:1px solid #7f1d35; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+    .status { margin-top:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); color:var(--muted); white-space:pre-wrap; }
+    .status.good { color:var(--good); border-color:rgba(52,211,153,.32); }
+    .status.warn { color:var(--warn); border-color:rgba(251,191,36,.32); }
+    .status.bad { color:var(--bad); border-color:rgba(251,113,133,.32); }
+    .hidden { display:none !important; }
+    .account-top { display:flex; justify-content:space-between; align-items:start; gap:18px; flex-wrap:wrap; }
+    .plan-badge { display:inline-flex; padding:5px 9px; border-radius:7px; background:#202b41; color:#b8d2ff; font-size:12px; font-weight:700; }
+    .meta { color:var(--muted); font-size:13px; margin-top:8px; }
+    .billing-controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:0; margin:14px 0 18px; border:0; }
+    .billing-controls label { display:inline-flex; align-items:center; gap:7px; margin:0; color:var(--text); cursor:pointer; }
+    .billing-controls input { width:auto; }
+    .plans { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .plan-card { border:1px solid var(--line); background:#10131b; border-radius:13px; padding:17px; display:flex; flex-direction:column; gap:8px; }
+    .plan-price { font-size:25px; font-weight:700; letter-spacing:-.03em; }
+    .plan-card .small { min-height:38px; color:var(--muted); }
+    .plan-card button { width:100%; margin-top:8px; }
+    .history { display:flex; flex-direction:column; }
+    .history-row { display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:14px 0; border-bottom:1px solid var(--line); }
+    .history-row:last-child { border-bottom:0; }
+    .history-row .details { color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+    .history-row .amount { font-weight:700; text-align:right; }
+    .legal { border-top:1px solid var(--line); margin-top:28px; padding-top:18px; color:var(--muted); font-size:12px; }
+    @media(max-width:760px) { .auth-grid,.plans { grid-template-columns:1fr; } .panel { padding:18px; } .wrap { margin-top:28px; } }
+  </style>
+</head>
+<body>
+<header><div class="nav">
+  <a class="brand" href="/">AuraVision AI</a>
+  <nav class="navlinks" aria-label="Account navigation"><a href="/studio.html">Studio</a><a href="/">Home</a></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="eyebrow">Your workspace</div>
+  <h1>My Account</h1>
+  <p class="muted">Sign in to keep your creations, subscription and billing history tied to your own account.</p>
+  <div id="setupStatus" class="status warn hidden" role="status"></div>
+
+  <section id="authArea" class="auth-grid">
+    <div class="panel">
+      <div class="eyebrow">Account access</div>
+      <h2 id="authHeading">Create your account</h2>
+      <p class="muted small" id="authDescription">Use a unique email and a strong password. Your password is hashed on the server.</p>
+      <form id="authForm">
+        <div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="At least 10 characters"></div>
+        <div class="field" id="confirmField"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Repeat your password"></div>
+        <div class="actions"><button id="authSubmit" type="submit">Create account</button><button id="toggleMode" type="button" class="secondary">I already have an account</button></div>
+      </form>
+      <p class="muted small" style="margin-top:16px">AuraVision does not collect or store card numbers or CVV. Payment details are entered securely in Razorpay Checkout.</p>
+    </div>
+    <div class="panel">
+      <h2>One account, your own workspace</h2>
+      <p class="muted">Your subscription, account quota and server-side generation history are associated with your account. You can sign in from another browser to continue.</p>
+      <p class="muted small">The site needs the owner's persistent database and approved Razorpay merchant account before live payments can be accepted.</p>
+    </div>
+  </section>
+
+  <section id="accountArea" class="hidden">
+    <div class="panel">
+      <div class="account-top">
+        <div><div class="eyebrow">Signed in</div><h2 id="accountEmail"></h2><p id="accountMeta" class="meta"></p></div>
+        <div class="actions" style="margin-top:0"><span id="planBadge" class="plan-badge">FREE</span><button id="logoutButton" class="secondary" type="button">Sign out</button></div>
+      </div>
+      <div id="accountStatus" class="status hidden" role="status"></div>
+      <div class="actions"><a class="button secondary" href="/studio.html">Open Studio</a><button id="cancelButton" class="danger hidden" type="button">Cancel renewal</button></div>
+    </div>
+
+    <div id="plansPanel" class="panel">
+      <h2>Choose a subscription</h2>
+      <p class="muted">Razorpay handles the actual payment and recurring billing mandate.</p>
+      <fieldset class="billing-controls">
+        <label><input type="radio" name="billing" value="monthly" checked> Monthly</label>
+        <label><input type="radio" name="billing" value="yearly"> Yearly (15% saving)</label>
+      </fieldset>
+      <div id="planCards" class="plans"></div>
+      <div id="checkoutMessage" class="status hidden" role="status"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Payment history</h2><p class="muted small">Only verified payments from this account appear here.</p>
+      <div id="historyList" class="history"><p class="muted small">Loading history…</p></div>
+    </div>
+  </section>
+
+  <div class="legal">Razorpay is the payment provider. Subscription activation follows signed payment notifications from Razorpay. Cancelled subscriptions keep access only through the paid-through date shown above.</div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var account = null;
+  var config = { ready:false, databaseReady:false, razorpayConfigured:false, message:"Loading payment configuration…" };
+  var plans = [];
+  var authMode = new URLSearchParams(window.location.search).get("mode") === "login" ? "login" : "register";
+  var authForm = document.getElementById("authForm");
+  var submitButton = document.getElementById("authSubmit");
+  var authStatus = document.getElementById("setupStatus");
+
+  function money(value) { return "₹" + Number(value || 0).toLocaleString("en-IN"); }
+  function formatDate(value) {
+    if (!value) return "not available yet";
+    var date = new Date(value);
+    return isNaN(date.getTime()) ? "not available yet" : date.toLocaleString("en-IN", { dateStyle:"medium", timeStyle:"short" });
+  }
+  function showStatus(element, message, kind) {
+    element.textContent = message;
+    element.className = "status" + (kind ? " " + kind : "");
+    element.classList.remove("hidden");
+  }
+  async function api(url, method, body) {
+    var options = { method:method || "GET", credentials:"same-origin", headers:{ "Accept":"application/json" } };
+    if (body !== undefined && body !== null) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(body);
+    }
+    var response = await fetch(url, options);
+    var data = await response.json().catch(function () { return {}; });
+    if (!response.ok) throw new Error(data.message || data.error || data.detail || ("Request failed (HTTP " + response.status + ")."));
+    return data;
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    var registering = authMode === "register";
+    document.getElementById("authHeading").textContent = registering ? "Create your account" : "Sign in";
+    document.getElementById("authDescription").textContent = registering
+      ? "Use a unique email and a strong password. Passwords are hashed on the server."
+      : "Sign in to your existing AuraVision AI account.";
+    document.getElementById("confirmField").classList.toggle("hidden", !registering);
+    document.getElementById("confirmPassword").required = registering;
+    document.getElementById("password").autocomplete = registering ? "new-password" : "current-password";
+    submitButton.textContent = registering ? "Create account" : "Sign in";
+    document.getElementById("toggleMode").textContent = registering ? "I already have an account" : "Create a new account";
+  }
+  document.getElementById("toggleMode").addEventListener("click", function () {
+    setAuthMode(authMode === "register" ? "login" : "register");
+  });
+
+  authForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var email = document.getElementById("email").value.trim();
+    var password = document.getElementById("password").value;
+    var confirmPassword = document.getElementById("confirmPassword").value;
+    if (authMode === "register" && password !== confirmPassword) {
+      showStatus(authStatus, "Passwords do not match.", "bad"); return;
+    }
+    if (authMode === "register" && password.length < 10) {
+      showStatus(authStatus, "Use a password with at least 10 characters.", "bad"); return;
+    }
+    submitButton.disabled = true;
+    showStatus(authStatus, authMode === "register" ? "Creating your account…" : "Signing in…", "");
+    try {
+      await api(authMode === "register" ? "/api/auth/register" : "/api/auth/login", "POST", { email:email, password:password });
+      var redirect = new URLSearchParams(window.location.search).get("redirect");
+      if (redirect && redirect.charAt(0) === "/" && redirect.indexOf("//") !== 0) {
+        window.location.assign(redirect);
+        return;
+      }
+      await loadPage();
+      if (new URLSearchParams(window.location.search).get("upgrade") === "true") {
+        document.getElementById("plansPanel").scrollIntoView({ behavior:"smooth", block:"start" });
+      }
+    } catch (error) {
+      showStatus(authStatus, error.message, "bad");
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  document.getElementById("logoutButton").addEventListener("click", async function () {
+    this.disabled = true;
+    try {
+      await api("/api/auth/logout", "POST", {});
+      account = null;
+      await loadPage();
+      setAuthMode("login");
+      showStatus(authStatus, "You have signed out.", "good");
+    } catch (error) {
+      showStatus(document.getElementById("accountStatus"), error.message, "bad");
+    } finally {
+      this.disabled = false;
+    }
+  });
+
+  document.querySelectorAll('input[name="billing"]').forEach(function (radio) {
+    radio.addEventListener("change", renderPlans);
+  });
+
+  async function loadConfigAndPlans() {
+    try {
+      config = await api("/api/checkout/config");
+      plans = await api("/api/checkout/plans");
+    } catch (error) {
+      config.ready = false;
+      config.message = error.message;
+    }
+    if (!config.ready) showStatus(document.getElementById("setupStatus"), config.message ||
+      "Live checkout is disabled until persistent PostgreSQL and Razorpay credentials are configured.", "warn");
+    renderPlans();
+  }
+
+  function renderPlans() {
+    var container = document.getElementById("planCards");
+    container.replaceChildren();
+    var billingRadio = document.querySelector('input[name="billing"]:checked');
+    var yearly = billingRadio && billingRadio.value === "yearly";
+    plans.forEach(function (plan) {
+      var card = document.createElement("div"); card.className = "plan-card";
+      var title = document.createElement("h3"); title.textContent = plan.name;
+      var price = document.createElement("div"); price.className = "plan-price";
+      price.textContent = money(yearly ? plan.yearly : plan.monthly);
+      var interval = document.createElement("div"); interval.className = "small";
+      interval.textContent = yearly ? "per year · renews yearly" : "per month · renews monthly";
+      var limits = document.createElement("p"); limits.className = "small";
+      limits.textContent = plan.imagesPerDay + " images per day · " + plan.videosPerDay + " videos per day";
+      var button = document.createElement("button"); button.type = "button";
+      button.textContent = "Choose " + plan.name;
+      button.disabled = !account || !config.ready || account.plan !== "FREE" ||
+        account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT";
+      button.addEventListener("click", function () { startCheckout(plan.id, yearly, button); });
+      card.append(title, price, interval, limits, button);
+      container.appendChild(card);
+    });
+  }
+
+  async function startCheckout(planId, yearly, button) {
+    if (!account) {
+      showStatus(authStatus, "Sign in or create an account first.", "warn");
+      document.getElementById("authArea").scrollIntoView({ behavior:"smooth" }); return;
+    }
+    if (!config.ready) {
+      showStatus(document.getElementById("checkoutMessage"), config.message, "warn"); return;
+    }
+    if (typeof window.Razorpay !== "function") {
+      showStatus(document.getElementById("checkoutMessage"), "Razorpay Checkout did not load. Refresh the page and retry.", "bad"); return;
+    }
+    button.disabled = true;
+    button.textContent = "Preparing secure checkout…";
+    try {
+      var checkout = await api("/api/checkout/subscriptions", "POST", { plan:planId, yearly:yearly });
+      var options = {
+        key:checkout.keyId,
+        subscription_id:checkout.subscriptionId,
+        name:"AuraVision AI",
+        description:checkout.description,
+        image:"/favicon.svg",
+        prefill:{ email:checkout.email },
+        notes:{ product:"AuraVision AI", plan:checkout.plan, billing:yearly ? "yearly" : "monthly" },
+        theme:{ color:"#7aa7ff" },
+        modal:{ ondismiss:function () {
+          showStatus(document.getElementById("checkoutMessage"),
+            "Checkout was closed. If you completed payment, a verified webhook will update your account.", "warn");
+          button.disabled = false;
+          button.textContent = "Choose " + titleCase(planId);
+        }},
+        handler:async function (response) {
+          showStatus(document.getElementById("checkoutMessage"), "Verifying checkout response…", "");
+          try {
+            await api("/api/checkout/verify", "POST", {
+              orderId:checkout.orderId,
+              razorpayPaymentId:response.razorpay_payment_id,
+              razorpaySubscriptionId:response.razorpay_subscription_id || checkout.subscriptionId,
+              razorpaySignature:response.razorpay_signature
+            });
+            var attempts = 0, purchase = null;
+            while (attempts < 20) {
+              purchase = await api("/api/checkout/orders/" + encodeURIComponent(checkout.orderId));
+              if (purchase.status === "PAID") break;
+              if (purchase.status === "FAILED") throw new Error("Razorpay could not confirm this charge. Check its status before trying again.");
+              await new Promise(function (resolve) { window.setTimeout(resolve, 3000); });
+              attempts++;
+            }
+            if (purchase && purchase.status === "PAID") {
+              showStatus(document.getElementById("checkoutMessage"), "Payment verified. Your " + checkout.plan + " plan is active.", "good");
+            } else {
+              showStatus(document.getElementById("checkoutMessage"),
+                "Razorpay returned the checkout signature, but the signed payment webhook has not arrived yet. Paid features stay locked until it confirms the charge.", "warn");
+            }
+            await loadPage();
+          } catch (error) {
+            showStatus(document.getElementById("checkoutMessage"), error.message, "bad");
+            button.disabled = false;
+            button.textContent = "Choose " + titleCase(planId);
+          }
+        }
+      };
+      var instance = new window.Razorpay(options);
+      instance.on("payment.failed", function () {
+        showStatus(document.getElementById("checkoutMessage"), "Payment failed or was declined. No paid access was granted.", "bad");
+        button.disabled = false;
+        button.textContent = "Choose " + titleCase(planId);
+      });
+      instance.open();
+    } catch (error) {
+      showStatus(document.getElementById("checkoutMessage"), error.message, "bad");
+      button.disabled = false;
+      button.textContent = "Choose " + titleCase(planId);
+    }
+  }
+
+  function titleCase(value) { return value.charAt(0) + value.slice(1).toLowerCase(); }
+
+  document.getElementById("cancelButton").addEventListener("click", async function () {
+    if (!window.confirm("Cancel renewal at the end of the paid period? Your plan remains available until the displayed expiry date.")) return;
+    this.disabled = true;
+    try {
+      var result = await api("/api/checkout/subscriptions/cancel", "POST", {});
+      showStatus(document.getElementById("accountStatus"), result.message + " Paid through: " + formatDate(result.expiresAt), "good");
+      await loadPage();
+    } catch (error) {
+      showStatus(document.getElementById("accountStatus"), error.message, "bad");
+    } finally { this.disabled = false; }
+  });
+
+  async function loadHistory() {
+    var container = document.getElementById("historyList");
+    container.replaceChildren();
+    try {
+      var items = await api("/api/checkout/history");
+      if (!items.length) {
+        var empty = document.createElement("p"); empty.className = "muted small"; empty.textContent = "No payments yet.";
+        container.appendChild(empty); return;
+      }
+      items.forEach(function (item) {
+        var row = document.createElement("div"); row.className = "history-row";
+        var left = document.createElement("div");
+        var title = document.createElement("strong");
+        title.textContent = item.plan + (item.yearly ? " · Yearly" : " · Monthly");
+        var details = document.createElement("div"); details.className = "details";
+        details.textContent = item.status + " · " + formatDate(item.createdAt) +
+          (item.transactionReference ? " · Ref " + item.transactionReference : "");
+        left.append(title, details);
+        var amount = document.createElement("div"); amount.className = "amount"; amount.textContent = money(item.amountRupees);
+        row.append(left, amount); container.appendChild(row);
+      });
+    } catch (error) {
+      var err = document.createElement("p"); err.className = "muted small"; err.textContent = error.message; container.appendChild(err);
+    }
+  }
+
+  async function loadPage() {
+    try { account = await api("/api/auth/me"); }
+    catch (error) {
+      showStatus(authStatus, error.message, "bad");
+      account = { authenticated:false, plan:"FREE" };
+    }
+    document.getElementById("authArea").classList.toggle("hidden", !!account.authenticated);
+    document.getElementById("accountArea").classList.toggle("hidden", !account.authenticated);
+    if (!account.authenticated) { setAuthMode(authMode); return; }
+
+    document.getElementById("accountEmail").textContent = account.email || "AuraVision user";
+    document.getElementById("accountMeta").textContent = "Account created " + formatDate(account.createdAt) +
+      " · " + (account.imagesLeft || 0) + " images and " + (account.videosLeft || 0) + " videos remaining today";
+    document.getElementById("planBadge").textContent = account.plan || "FREE";
+    var statusBox = document.getElementById("accountStatus");
+    if (account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT") {
+      showStatus(statusBox, "Your subscription is awaiting a verified charge. Paid features remain locked until confirmation.", "warn");
+    } else if (account.subscriptionStatus === "CANCEL_AT_CYCLE_END") {
+      showStatus(statusBox, "Renewal is cancelled. Access remains available until " + formatDate(account.expiresAt) + ".", "good");
+    } else if (account.plan !== "FREE") {
+      showStatus(statusBox, "Subscription status: " + (account.subscriptionStatus || "ACTIVE") +
+        ". Paid through " + formatDate(account.expiresAt) + ".", "good");
+    } else {
+      statusBox.classList.add("hidden");
+    }
+    document.getElementById("cancelButton").classList.toggle("hidden", account.subscriptionStatus !== "ACTIVE");
+    document.getElementById("plansPanel").classList.toggle("hidden",
+      account.plan !== "FREE" || account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT");
+    renderPlans();
+    await loadHistory();
+  }
+
+  setAuthMode(authMode);
+  Promise.all([loadConfigAndPlans(), loadPage()]).catch(function (error) { showStatus(authStatus, error.message, "bad"); });
+})();
+</script>
+</body>
+</html>

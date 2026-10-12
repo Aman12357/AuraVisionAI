@@ -1054,9 +1054,10 @@
           <li><a href="https://gemini.google/students/">For Students</a></li>
           <li><a href="https://gemini.google/overview/">Features</a></li>
           <li><a href="https://gemini.google/explore/">Explore</a></li>
-          <li><a href="https://gemini.google/subscriptions/">Subscriptions</a></li>
+          <li><a href="/account.html">Subscriptions</a></li>
           <li><a href="https://gemini.google/gemini-drops/">What's New</a></li>
         </ul>
+        <a class="btn primary" href="/account.html">My Account</a>
         <a class="btn primary" href="/studio.html">Try AuraVision AI</a>
       </nav>
     </div>
@@ -1069,7 +1070,7 @@
         <p class="lead">AuraVision AI makes creating videos as easy as having a conversation. Think of it like
           Nano Banana for video. Start from scratch, remix your gallery, or try out a premade template.</p>
         <a class="btn primary" href=" /studio.html">Try AuraVision AI</a>
-        <p class="fine">Not on a paid plan yet? <a href="#pay" data-pay>Upgrade</a> to unlock access to
+        <p class="fine">Not on a paid plan yet? <a href="/account.html?upgrade=true">Upgrade</a> to unlock access to
           AuraVision AI and more.</p>
       </div>
     </div>
@@ -1309,215 +1310,9 @@
     </div>
   </footer>
 
-  <dialog class="pay" id="pay" aria-labelledby="pay-title">
-    <div class="pay-grid">
-      <aside class="pay-side">
-        <div>
-          <h3 id="pay-title">Choose your plan</h3>
-          <p class="muted">Unlock AuraVision AI video generation and editing.</p>
-        </div>
-        <div class="bill" role="radiogroup" aria-label="Billing period">
-          <label><input type="radio" name="bill" value="m" checked>Monthly</label>
-          <label><input type="radio" name="bill" value="y">Yearly · save 15%</label>
-        </div>
-        <label class="plan"><input type="radio" name="plan" value="plus"><span><b>Plus</b><small>Omni access,
-              limited daily videos</small></span><span class="pr" data-p="plus"></span></label>
-        <label class="plan"><input type="radio" name="plan" value="pro" checked><span><b>Pro</b><small>More
-              videos, 10 second clips, scene extensions</small></span><span class="pr" data-p="pro"></span></label>
-        <label class="plan"><input type="radio" name="plan" value="ultra"><span><b>Ultra</b><small>Highest
-              limits and early features</small></span><span class="pr" data-p="ultra"></span></label>
-        <div class="total" aria-live="polite">
-          <div><span id="t-label">Pro, monthly</span><span id="t-sub"></span></div>
-          <div><span>Taxes</span><span>Included</span></div>
-          <div class="sum"><span>Due today</span><span id="t-sum"></span></div>
-        </div>
-      </aside>
-      <div class="pay-main">
-        <button class="pay-x" type="button" aria-label="Close" id="pay-x">×</button>
-        <h3>Payment details</h3>
-        <p class="muted">Demo checkout. No payment is processed and nothing is stored.</p>
-        <div class="methods" role="group" aria-label="Payment method">
-          <button type="button" aria-pressed="true" data-m="card">Card</button>
-          <button type="button" aria-pressed="false" data-m="upi">UPI</button>
-          <button type="button" aria-pressed="false" data-m="bank">Net banking</button>
-          <button type="button" aria-pressed="false" data-m="wallet">Wallet</button>
-        </div>
-        <form id="pay-form" novalidate autocomplete="off">
-          <div class="field"><label for="p-email">Email</label><input id="p-email" type="email"
-              placeholder="you@example.com" autocomplete="email"><span class="err"></span></div>
-          <div id="m-card">
-            <div class="field"><label for="p-name">Name on card</label><input id="p-name" placeholder="Full name"
-                autocomplete="cc-name"><span class="err"></span></div>
-            <div class="field"><label for="p-num">Card number</label>
-              <div class="cardwrap"><input id="p-num" inputmode="numeric" placeholder="1234 5678 9012 3456"
-                  maxlength="23" autocomplete="cc-number"><span class="brand" id="brand"></span></div><span
-                class="err"></span>
-            </div>
-            <div class="row2">
-              <div class="field"><label for="p-exp">Expiry</label><input id="p-exp" inputmode="numeric"
-                  placeholder="MM/YY" maxlength="5" autocomplete="cc-exp"><span class="err"></span>
-              </div>
-              <div class="field"><label for="p-cvc">CVC</label><input id="p-cvc" inputmode="numeric" placeholder="123"
-                  maxlength="4" autocomplete="cc-csc"><span class="err"></span>
-              </div>
-            </div>
-          </div>
-          <div id="m-upi" hidden>
-            <div class="field"><label for="p-upi">UPI ID</label><input id="p-upi" placeholder="name@bank"><span
-                class="err"></span></div>
-          </div>
-          <div id="m-bank" hidden>
-            <div class="field"><label for="p-bank">Choose your bank</label><select id="p-bank"
-                style="font:inherit;color:var(--text);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;width:100%">
-                <option value="">Select bank</option>
-                <option>State Bank of India</option>
-                <option>HDFC Bank</option>
-                <option>ICICI Bank</option>
-                <option>Axis Bank</option>
-                <option>Kotak Mahindra Bank</option>
-                <option>Punjab National Bank</option>
-              </select><span class="err"></span></div>
-          </div>
-          <div id="m-wallet" hidden>
-            <p class="muted" style="margin-top:16px">You'll be redirected to your wallet provider to approve
-              the payment.</p>
-          </div>
-          <button class="btn primary payb" id="pay-go" type="submit"><span id="pay-txt">Pay</span></button>
-          <p class="secure">🔒 256-bit encrypted · Order <span id="order-id"></span> · Cancel anytime · 18+
-          </p>
-        </form>
-      </div>
-    </div>
-    <div class="done" role="status">
-      <div class="tick">✓</div>
-      <h3>You're subscribed</h3>
-      <p id="done-msg">AuraVision AI is ready. A receipt was sent to your email.</p>
-      <a class="btn primary" href="https://gemini.google.com/veo">Open AuraVision AI</a>
-    </div>
-    <div class="done otpbox">
-      <div class="tick">🔐</div>
-      <h3>Verify your payment</h3>
-      <p id="otp-msg">Enter the 6 digit code sent by your bank. Demo: any 6 digits work.</p>
-      <form id="otp-form" novalidate>
-        <div class="field" style="max-width:260px;margin:0 auto 6px"><input id="otp" inputmode="numeric" maxlength="6"
-            placeholder="••••••" aria-label="One-time password"
-            style="text-align:center;font-size:24px;letter-spacing:.4em"><span class="err"></span></div>
-        <button class="btn primary payb" id="otp-go" type="submit" style="max-width:260px;margin:18px auto 0">Verify and
-          pay</button>
-      </form>
-      <p class="muted" style="margin:16px 0 0"><span id="resend">Resend code in 30s</span> · <a href="#" id="otp-back"
-          style="color:var(--blue);text-decoration:underline">Change payment method</a></p>
-    </div>
-  </dialog>
+  
 
-  <script>
-    (() => {
-      const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-      const dlg = $('#pay'), form = $('#pay-form');
-      // Sample prices only; replace with your real pricing
-      const P = { plus: { n: 'Plus', m: 399 }, pro: { n: 'Pro', m: 1950 }, ultra: { n: 'Ultra', m: 24999 } };
-      const val = n => document.querySelector(`input[name=${n}]:checked`).value;
-      const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
-      let method = 'card';
-
-      function price(k, b) { return b === 'y' ? P[k].m * 12 * .85 : P[k].m }
-      function update() {
-        const b = val('bill'), k = val('plan'), per = b === 'y' ? '/yr' : '/mo';
-        Object.keys(P).forEach(x => $(`[data-p=${x}]`).textContent = fmt(price(x, b)) + per);
-        const t = price(k, b);
-        $('#t-label').textContent = `${P[k].n}, ${b === 'y' ? 'yearly' : 'monthly'}`;
-        $('#t-sub').textContent = fmt(t);
-        $('#t-sum').textContent = fmt(t);
-        $('#pay-txt').textContent = `Pay ${fmt(t)}`;
-      }
-      $$('input[name=bill],input[name=plan]').forEach(i => i.addEventListener('change', update));
-      update();
-
-      $$('[data-pay]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); dlg.classList.remove('ok', 'otp'); dlg.showModal() }));
-      $('#pay-x').onclick = () => dlg.close();
-      dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close() });
-
-      $$('.methods button').forEach(b => b.addEventListener('click', () => {
-        method = b.dataset.m;
-        $$('.methods button').forEach(x => x.setAttribute('aria-pressed', x === b));
-        ['card', 'upi', 'bank', 'wallet'].forEach(m => $('#m-' + m).hidden = m !== method);
-      }));
-
-      // input formatting
-      const num = $('#p-num'), exp = $('#p-exp'), cvc = $('#p-cvc');
-      const brandOf = d => /^4/.test(d) ? 'VISA' : /^(5[1-5]|2[2-7])/.test(d) ? 'MASTERCARD' : /^3[47]/.test(d) ? 'AMEX' : /^(60|65|81|82)/.test(d) ? 'RUPAY' : '';
-      num.addEventListener('input', () => {
-        const d = num.value.replace(/\D/g, '').slice(0, 19);
-        num.value = d.replace(/(.{4})/g, '$1 ').trim();
-        $('#brand').textContent = brandOf(d);
-      });
-      exp.addEventListener('input', () => {
-        let d = exp.value.replace(/\D/g, '').slice(0, 4);
-        exp.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
-      });
-      cvc.addEventListener('input', () => cvc.value = cvc.value.replace(/\D/g, ''));
-
-      const luhn = s => { let sum = 0, alt = false; for (let i = s.length - 1; i >= 0; i--) { let n = +s[i]; if (alt) { n *= 2; if (n > 9) n -= 9 } sum += n; alt = !alt } return s.length >= 13 && sum % 10 === 0 };
-      function expOk(v) {
-        const m = /^(\d\d)\/(\d\d)$/.exec(v); if (!m) return false;
-        const mo = +m[1], yr = 2000 + +m[2], now = new Date();
-        if (mo < 1 || mo > 12) return false;
-        return yr > now.getFullYear() || (yr === now.getFullYear() && mo >= now.getMonth() + 1);
-      }
-      function check(input, ok, msg) {
-        const f = input.closest('.field'); f.classList.toggle('bad', !ok);
-        f.querySelector('.err').textContent = ok ? '' : msg; return ok;
-      }
-
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        let ok = check($('#p-email'), /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('#p-email').value), 'Enter a valid email address.');
-        if (method === 'card') {
-          const d = num.value.replace(/\D/g, '');
-          ok = check($('#p-name'), $('#p-name').value.trim().length > 1, 'Enter the name on your card.') && ok;
-          ok = check(num, luhn(d), 'Enter a valid card number.') && ok;
-          ok = check(exp, expOk(exp.value), 'Enter a valid, future expiry date.') && ok;
-          ok = check(cvc, cvc.value.length >= 3, 'Enter the 3 or 4 digit code.') && ok;
-        } else if (method === 'bank') {
-          ok = check($('#p-bank'), !!$('#p-bank').value, 'Select your bank.') && ok;
-        } else if (method === 'upi') {
-          ok = check($('#p-upi'), /^[\w.\-]{2,}@[a-z]{2,}$/i.test($('#p-upi').value), 'Enter a valid UPI ID, like name@bank.') && ok;
-        }
-        if (!ok) { form.querySelector('.bad input')?.focus(); return }
-
-        const btn = $('#pay-go'); btn.disabled = true;
-        btn.innerHTML = '<span class="spin"></span><span>Contacting gateway…</span>';
-        // TODO: replace with a real call to your payment gateway (Razorpay, Stripe, etc.)
-        setTimeout(() => {
-          btn.disabled = false; btn.innerHTML = '<span id="pay-txt"></span>'; update();
-          if (method === 'card' || method === 'bank') { startOtp() } else { finish() }
-        }, 1400);
-      });
-
-      const orderId = 'AV' + Date.now().toString(36).toUpperCase();
-      $('#order-id').textContent = orderId;
-      let timer;
-      function startOtp() {
-        dlg.classList.add('otp'); $('#otp').value = ''; $('#otp').focus();
-        let n = 30; clearInterval(timer);
-        const r = $('#resend'); r.textContent = `Resend code in ${n}s`;
-        timer = setInterval(() => { n--; r.textContent = n > 0 ? `Resend code in ${n}s` : 'Code expired. Go back and retry.'; if (n <= 0) clearInterval(timer) }, 1000);
-      }
-      $('#otp').addEventListener('input', e => e.target.value = e.target.value.replace(/\D/g, ''));
-      $('#otp-back').addEventListener('click', e => { e.preventDefault(); clearInterval(timer); dlg.classList.remove('otp') });
-      $('#otp-form').addEventListener('submit', e => {
-        e.preventDefault();
-        if (!check($('#otp'), $('#otp').value.length === 6, 'Enter the 6 digit code.')) return;
-        const g = $('#otp-go'); g.disabled = true; g.innerHTML = '<span class="spin"></span><span>Verifying…</span>';
-        setTimeout(() => { g.disabled = false; g.textContent = 'Verify and pay'; clearInterval(timer); finish() }, 1200);
-      });
-      function finish() {
-        const txn = 'TXN' + Math.random().toString(36).slice(2, 10).toUpperCase();
-        $('#done-msg').textContent = `Your ${P[val('plan')].n} plan is active. Paid ${$('#t-sum').textContent} · Order ${orderId} · Ref ${txn}. A receipt was sent to ${$('#p-email').value}.`;
-        dlg.classList.remove('otp'); dlg.classList.add('ok'); form.reset(); $('#brand').textContent = ''; update();
-      }
-    })();
-  </script>
+  
 
   <script>
     document.getElementById('chips').addEventListener('click', e => {

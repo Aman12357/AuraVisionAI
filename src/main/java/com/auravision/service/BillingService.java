@@ -134,7 +134,7 @@ public class BillingService {
         purchase.setCheckoutPaymentId(paymentId);
         if (purchase.getStatus() != Payment.Status.PAID) purchase.setStatus(Payment.Status.PENDING);
         payments.save(purchase);
-        return purchaseStatus(purchase, owner);
+        return purchaseStatus(owner, orderId);
     }
 
     @Transactional(readOnly = true)

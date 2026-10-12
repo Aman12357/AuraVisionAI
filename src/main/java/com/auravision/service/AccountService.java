@@ -33,6 +33,10 @@ public class AccountService {
 
     @Transactional
     public AccountUser register(String email, String password, String anonymousOwnerToken) {
+        if (!isPersistentDatabaseConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Account registration requires persistent PostgreSQL. The owner must configure SPRING_PROFILES_ACTIVE=postgres and DB_URL, DB_USER, DB_PASSWORD in Render first.");
+        }
         String normalisedEmail = normaliseEmail(email);
         if (users.findByEmail(normalisedEmail).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this email. Sign in instead.");
@@ -54,6 +58,10 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public AccountUser authenticate(String email, String password) {
+        if (!isPersistentDatabaseConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Account sign-in requires the persistent PostgreSQL database. Check the AuraVision service setup in Render.");
+        }
         AccountUser user = users.findByEmail(normaliseEmail(email))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email or password is incorrect."));
         if (!passwordHasher.matches(password, user.getPasswordHash())) {

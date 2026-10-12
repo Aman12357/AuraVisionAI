@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "account_sessions", indexes = @Index(columnList = "expiresAt"))
+@Table(name = "account_sessions")
 @Getter @Setter @NoArgsConstructor
 public class AccountSession {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

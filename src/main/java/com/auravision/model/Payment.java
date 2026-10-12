@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "payments", indexes = @Index(columnList = "ownerToken"))
+@Table(name = "payments")
 @Getter @Setter @NoArgsConstructor
 public class Payment {
     public enum Status { CREATED, PENDING, PAID, FAILED }

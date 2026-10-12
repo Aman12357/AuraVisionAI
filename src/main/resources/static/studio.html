@@ -2314,7 +2314,7 @@
        ========================================================================== */
     async function handleGenerate() {
       if (isGenerating) return;
-      if (!activeAccount.authenticated) {
+      if (!activeAccount.authenticated && activeAccount.databaseReady) {
         window.location.href = '/account.html?mode=register&redirect=%2Fstudio.html';
         return;
       }

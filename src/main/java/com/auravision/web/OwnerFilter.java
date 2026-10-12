@@ -52,7 +52,7 @@ public class OwnerFilter extends OncePerRequestFilter {
         }
         req.setAttribute(ATTR, owner);
 
-        if (req.getRequestURI().startsWith("/api/generations") && account == null) {
+        if (req.getRequestURI().startsWith("/api/generations") && account == null && accounts.isPersistentDatabaseConfigured()) {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.setCharacterEncoding("UTF-8");
             res.setContentType("application/json");

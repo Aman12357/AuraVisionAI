@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraVision AI — Learn More</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #151821;
+      --surface2: #1d212c;
+      --text: #f1f3f8;
+      --muted: #a3a9b8;
+      --line: #2a2f3c;
+      --grad: linear-gradient(135deg, #6fa0ff 0%, #b48cff 50%, #ff8fb8 100%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Google Sans Flex', system-ui, sans-serif; line-height: 1.6; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    header { border-bottom: 1px solid var(--line); padding: 18px 0; background: rgba(11,13,18,0.85); backdrop-filter: blur(12px); position: sticky; top: 0; }
+    .nav { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 20px; font-weight: 700; background: var(--grad); -webkit-background-clip: text; color: transparent; text-decoration: none; }
+    .btn { display: inline-block; padding: 9px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; text-decoration: none; transition: 0.2s; }
+    .btn-primary { background: var(--grad); color: #fff; }
+    .btn-outline { border: 1px solid var(--line); color: var(--text); margin-right: 8px; }
+    .hero { text-align: center; padding: 60px 0 30px; }
+    .hero h1 { font-size: clamp(32px, 5vw, 46px); margin-bottom: 12px; }
+    .hero p { color: var(--muted); font-size: 17px; max-width: 580px; margin: 0 auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 40px 0; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+    .card h3 { font-size: 18px; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: 14px; }
+    .badge { display: inline-block; padding: 3px 8px; background: rgba(180,140,255,0.15); color: #b48cff; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+    .cta { background: var(--surface2); border: 1px solid var(--line); border-radius: 20px; padding: 40px 20px; text-align: center; margin: 40px 0 60px; }
+    .cta h2 { font-size: 26px; margin-bottom: 8px; }
+    .cta p { color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+    footer { border-top: 1px solid var(--line); padding: 24px 0; text-align: center; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <div class="wrap nav">
+      <a href="index.html" class="logo">AuraVision AI</a>
+      <div>
+        <a href="index.html" class="btn btn-outline">Home</a>
+        <a href="studio.html" class="btn btn-primary">Try Studio</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="wrap">
+    <div class="hero">
+      <h1>About AuraVision AI</h1>
+      <p>Transform textual ideas into high-definition visuals using advanced multimodal AI models.</p>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="grid">
+      <div class="card">
+        <span class="badge">Engine</span>
+        <h3>Dual AI Inference</h3>
+        <p>Switch seamlessly between Aura Diffusion 3.2 and Gemini Multimodal Vision to match your artistic needs.</p>
+      </div>
+
+      <div class="card">
+        <span class="badge">Controls</span>
+        <h3>Prompt & Presets</h3>
+        <p>Fine-tune aspect ratios (1:1, 16:9, 9:16), negative prompts, and 9 creative visual styles with 1 click.</p>
+      </div>
+
+      <div class="card">
+        <span class="badge">Library</span>
+        <h3>Saved Creations</h3>
+        <p>Every creation is stored locally in your library with built-in favorites, instant deletion, and PNG downloads.</p>
+      </div>
+    </div>
+
+    <!-- Student & Starter Plan CTA -->
+    <div class="cta">
+      <h2>Free Starter & Student Access</h2>
+      <p>Start with 25 free credits right in the studio. No credit card required.</p>
+      <a href="studio.html" class="btn btn-primary">Launch Studio Now →</a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap">
+      <p>© 2026 Aura Vision AI. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -4,6 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d12">
+  <script>
+    (function () {
+      var savedTheme = "dark";
+      try {
+        savedTheme = localStorage.getItem("aura_theme") === "light" ? "light" : "dark";
+      } catch (_) {}
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    })();
+  </script>
   <title>AuraVision AI — Learn More</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;600;700&display=swap" rel="stylesheet">

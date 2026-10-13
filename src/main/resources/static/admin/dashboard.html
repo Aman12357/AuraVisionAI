@@ -29,7 +29,7 @@ table{width:100%;border-collapse:collapse;min-width:690px}th,td{text-align:left;
 .mobile-users{display:none;gap:10px}.user-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:14px}.user-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}.user-email{min-width:0;font-weight:650;overflow-wrap:anywhere}.user-id{font-size:12px;color:var(--muted);flex-shrink:0}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.user-meta-label{display:block;color:var(--muted);font-size:11px;margin-bottom:3px}.user-meta-value{display:block;overflow-wrap:anywhere;font-size:13px}
 .features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.feature{min-width:0;padding:15px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}.feature strong{display:block;margin-bottom:5px}.feature span{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}.feature.disabled{opacity:.85}
 #error{color:var(--danger)}.empty{padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center}
-@media(max-width:760px){.topbar{padding:12px 16px}.admin-email{max-width:60vw}.page-heading{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics .metric:last-child{grid-column:1/-1}.features{grid-template-columns:1fr}.desktop-users{display:none}.mobile-users{display:grid}main{width:min(100% - 28px,1200px)}}
+@media(max-width:760px){.topbar{flex-wrap:wrap;padding:12px 16px}.topbar>div:last-child{width:100%;justify-content:space-between}.admin-email{max-width:60vw}.page-heading{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics .metric:last-child{grid-column:1/-1}.features{grid-template-columns:1fr}.desktop-users{display:none}.mobile-users{display:grid}main{width:min(100% - 28px,1200px)}}
 @media(max-width:420px){.topbar{gap:8px}.brand-tag{display:block}.admin-email{font-size:11px;max-width:58vw}.btn{padding:8px 10px;min-height:40px;font-size:13px}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:23px}.metric-label{font-size:12px}.user-meta{gap:10px}.panel{padding:13px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
@@ -37,7 +37,7 @@ table{width:100%;border-collapse:collapse;min-width:690px}th,td{text-align:left;
 <body>
 <header class="topbar">
   <div class="brand-wrap"><div class="brand">AuraVision AI <span class="brand-tag">/ Admin</span></div><div class="admin-email" id="adminEmail">Checking administrator session…</div></div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn" href="/admin/tools.html">Manage users, credits & coupons</a><button class="btn" id="logout" type="button">Sign out</button></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn" href="/admin/tools.html">Manage tools</a><button class="btn" id="logout" type="button">Sign out</button></div>
 </header>
 <main>
   <div class="page-heading"><div><h1>Admin dashboard</h1><p class="intro">A private overview of registered accounts and current daily usage. Passwords and session tokens are never displayed.</p></div></div>

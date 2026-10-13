@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin Sign In | AuraVision AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(100%,420px);padding:32px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 24px 70px #0005}
+.brand{font-weight:750;font-size:20px;letter-spacing:-.03em}.eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;margin-top:28px}
+h1{font-size:30px;letter-spacing:-.04em;margin:6px 0}p{color:var(--muted);margin:0 0 24px}
+label{display:block;font-size:14px;margin:18px 0 7px}input{width:100%;border:1px solid var(--line);border-radius:9px;background:#0c0f16;color:var(--text);padding:13px;font:inherit}
+button{width:100%;border:0;border-radius:9px;background:var(--text);color:#11141a;font:700 15px system-ui;padding:13px;margin-top:22px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+#message{min-height:24px;margin-top:14px;color:#ffb4b4;font-size:14px}small{display:block;color:var(--muted);margin-top:20px;font-size:12px}
+</style>
+</head>
+<body><main>
+<div class="brand">AuraVision AI</div><div class="eyebrow">Private administration</div>
+<h1>Admin sign in</h1><p>Sign in with the administrator credentials configured for this service.</p>
+<form id="loginForm">
+<label for="email">Admin email</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254">
+<label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+<button id="submit" type="submit">Sign in securely</button><div id="message" role="status" aria-live="polite"></div>
+</form><small>Administrator access is restricted by the server. Do not share this URL or your credentials.</small>
+</main>
+<script>
+const form=document.getElementById('loginForm'),message=document.getElementById('message'),submit=document.getElementById('submit');
+form.addEventListener('submit',async event=>{event.preventDefault();message.textContent='';submit.disabled=true;
+try{const response=await fetch('/api/admin/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
+const data=await response.json().catch(()=>({}));
+if(!response.ok)throw new Error(data.message||'Sign in failed. Check your credentials and server configuration.');
+location.href='/admin/dashboard.html';
+}catch(error){message.textContent=error.message||'Could not sign in. Please try again.';submit.disabled=false;}
+});
+</script></body></html>

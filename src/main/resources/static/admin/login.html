@@ -4,34 +4,61 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b0d12">
 <title>Admin Sign In | AuraVision AI</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{width:min(100%,420px);padding:32px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 24px 70px #0005}
-.brand{font-weight:750;font-size:20px;letter-spacing:-.03em}.eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;margin-top:28px}
-h1{font-size:30px;letter-spacing:-.04em;margin:6px 0}p{color:var(--muted);margin:0 0 24px}
-label{display:block;font-size:14px;margin:18px 0 7px}input{width:100%;border:1px solid var(--line);border-radius:9px;background:#0c0f16;color:var(--text);padding:13px;font:inherit}
-button{width:100%;border:0;border-radius:9px;background:var(--text);color:#11141a;font:700 15px system-ui;padding:13px;margin-top:22px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
-#message{min-height:24px;margin-top:14px;color:#ffb4b4;font-size:14px}small{display:block;color:var(--muted);margin-top:20px;font-size:12px}
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff;--danger:#ffb4b4}
+*{box-sizing:border-box}
+html{min-width:320px}
+body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:clamp(14px,4vw,32px);background:radial-gradient(ellipse at top,#172033 0%,var(--bg) 55%);color:var(--text);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(100%,440px);padding:clamp(20px,6vw,36px);border:1px solid var(--line);border-radius:clamp(12px,3vw,18px);background:var(--panel);box-shadow:0 24px 70px #0005}
+.brand{font-weight:750;font-size:clamp(18px,4vw,21px);letter-spacing:-.03em}.eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;margin-top:clamp(22px,5vw,32px)}
+h1{font-size:clamp(26px,7vw,32px);line-height:1.15;letter-spacing:-.045em;margin:7px 0 10px}p{color:var(--muted);margin:0 0 22px;font-size:14px}
+label{display:block;font-size:14px;font-weight:600;margin:18px 0 7px}
+input{display:block;width:100%;min-height:48px;border:1px solid var(--line);border-radius:9px;background:#0c0f16;color:var(--text);padding:12px 13px;font:inherit;min-width:0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button{width:100%;min-height:48px;border:0;border-radius:9px;background:var(--text);color:#11141a;font:700 15px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:12px 14px;margin-top:22px;cursor:pointer;touch-action:manipulation}
+button:hover:not(:disabled){background:#dce6f8}button:disabled{opacity:.6;cursor:wait}
+#message{min-height:24px;margin-top:13px;color:var(--danger);font-size:14px;overflow-wrap:anywhere}
+small{display:block;color:var(--muted);margin-top:18px;font-size:12px;line-height:1.5}
+@media(max-width:360px){body{padding:10px}main{padding:20px 16px}.eyebrow{letter-spacing:.1em}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
-<body><main>
-<div class="brand">AuraVision AI</div><div class="eyebrow">Private administration</div>
-<h1>Admin sign in</h1><p>Sign in with the administrator credentials configured for this service.</p>
-<form id="loginForm">
-<label for="email">Admin email</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254">
-<label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
-<button id="submit" type="submit">Sign in securely</button><div id="message" role="status" aria-live="polite"></div>
-</form><small>Administrator access is restricted by the server. Do not share this URL or your credentials.</small>
+<body>
+<main>
+  <div class="brand">AuraVision AI</div>
+  <div class="eyebrow">Private administration</div>
+  <h1>Admin sign in</h1>
+  <p>Sign in with the administrator credentials configured for this service.</p>
+  <form id="loginForm">
+    <label for="email">Admin email</label>
+    <input id="email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required maxlength="254">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+    <button id="submit" type="submit">Sign in securely</button>
+    <div id="message" role="status" aria-live="polite"></div>
+  </form>
+  <small>Administrator access is restricted by the server. Never share your password. This page is not linked from the public site.</small>
 </main>
 <script>
-const form=document.getElementById('loginForm'),message=document.getElementById('message'),submit=document.getElementById('submit');
-form.addEventListener('submit',async event=>{event.preventDefault();message.textContent='';submit.disabled=true;
-try{const response=await fetch('/api/admin/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
-const data=await response.json().catch(()=>({}));
-if(!response.ok)throw new Error(data.message||'Sign in failed. Check your credentials and server configuration.');
-location.href='/admin/dashboard.html';
-}catch(error){message.textContent=error.message||'Could not sign in. Please try again.';submit.disabled=false;}
+const form=document.getElementById('loginForm');
+const message=document.getElementById('message');
+const submit=document.getElementById('submit');
+const emailInput=document.getElementById('email');
+const passwordInput=document.getElementById('password');
+form.addEventListener('submit',async event=>{
+  event.preventDefault();message.textContent='';submit.disabled=true;submit.textContent='Signing in…';
+  try{
+    const response=await fetch('/api/admin/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailInput.value,password:passwordInput.value})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.message||'Sign in failed. Check your credentials and server configuration.');
+    location.replace('/admin/dashboard.html');
+  }catch(error){
+    message.textContent=error.message||'Could not sign in. Please try again.';
+    submit.disabled=false;submit.textContent='Sign in securely';
+  }
 });
-</script></body></html>
+</script>
+</body>
+</html>

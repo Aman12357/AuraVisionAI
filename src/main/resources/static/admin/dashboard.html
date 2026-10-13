@@ -1,37 +1,124 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin Dashboard | AuraVision AI</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b0d12">
+<title>Admin Dashboard | AuraVision AI</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px clamp(18px,4vw,56px);border-bottom:1px solid var(--line)}.brand{font-weight:750;font-size:20px}.sub{color:var(--muted);font-size:13px}
-button{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 14px;cursor:pointer;font:inherit}
-main{max-width:1200px;margin:0 auto;padding:36px 22px}h1{margin:0 0 6px;font-size:30px;letter-spacing:-.04em}.intro{color:var(--muted);margin:0 0 26px}
-.panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px;margin:18px 0}.panel h2{font-size:18px;margin:0 0 14px}.status{color:var(--muted);margin:12px 0}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}td{font-size:14px}.pill{display:inline-block;padding:3px 8px;border-radius:6px;background:#253248;color:#c8dcff;font-size:12px}
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.feature{padding:16px;border:1px solid var(--line);border-radius:10px}.feature strong{display:block;margin-bottom:4px}.feature span{color:var(--muted);font-size:13px}
-#error{color:#ffb4b4}
-</style></head><body>
-<header><div><div class="brand">AuraVision AI <span class="sub">/ Admin</span></div><div class="sub" id="adminEmail">Checking administrator session…</div></div><button id="logout">Sign out</button></header>
-<main><h1>Admin dashboard</h1><p class="intro">Private overview of registered accounts. Sensitive account credentials are never displayed.</p>
-<section class="panel"><h2>Registered users</h2><div class="status" id="status">Loading user list…</div><div class="tablewrap"><table><thead><tr><th>ID</th><th>Email</th><th>Created</th><th>Plan</th><th>Images left today</th><th>Videos left today</th></tr></thead><tbody id="users"></tbody></table></div></section>
-<section class="panel"><h2>Administration tools</h2><div class="features">
-<div class="feature"><strong>User account overview</strong><span>Available: view account email, join date, plan and remaining daily quota.</span></div>
-<div class="feature"><strong>Credit adjustments</strong><span>Not enabled yet. The current app uses plan-based daily limits, not a separate credit wallet.</span></div>
-<div class="feature"><strong>Discount coupons</strong><span>Not enabled yet. Recurring subscription prices must be changed and verified server-side.</span></div>
-<div class="feature"><strong>Password reset</strong><span>Not enabled yet. Passwords cannot be viewed; a secure reset flow must be implemented.</span></div>
-</div><p class="status" id="error" role="status"></p></section>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--panel2:#10131b;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff;--danger:#ffb4b4}
+*{box-sizing:border-box}
+html{min-width:320px;scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,48px);border-bottom:1px solid var(--line);background:#0b0d12ed;backdrop-filter:blur(12px)}
+.brand-wrap{min-width:0}.brand{font-weight:750;font-size:clamp(17px,2vw,20px);letter-spacing:-.03em}.brand-tag{color:var(--muted);font-size:13px;font-weight:500}.admin-email{max-width:min(65vw,460px);overflow-wrap:anywhere;color:var(--muted);font-size:12px}
+.btn{min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);padding:9px 14px;white-space:nowrap}.btn:hover{border-color:#58647a;background:#1b202c}
+main{width:min(100% - 32px,1200px);margin:0 auto;padding:clamp(22px,4vw,40px) 0 48px}
+.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}
+h1{margin:0;font-size:clamp(25px,4vw,34px);line-height:1.15;letter-spacing:-.045em}h2{font-size:18px;line-height:1.3;margin:0 0 14px}.intro{color:var(--muted);margin:8px 0 0;max-width:650px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 18px}
+.metric,.panel{min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.metric{padding:18px}.metric-label{color:var(--muted);font-size:13px}.metric-value{display:block;margin-top:5px;font-size:clamp(23px,3vw,30px);font-weight:750;letter-spacing:-.04em;overflow-wrap:anywhere}.metric-note{font-size:12px;color:var(--muted)}
+.panel{padding:clamp(14px,2.4vw,22px);margin:18px 0}.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.status{color:var(--muted);margin:10px 0 14px;overflow-wrap:anywhere}
+.tablewrap{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:10px;overscroll-behavior-x:contain}
+table{width:100%;border-collapse:collapse;min-width:690px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top}th{background:var(--panel2);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}td{font-size:13px;overflow-wrap:anywhere}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#ffffff05}
+.plan{display:inline-block;border:1px solid #34435b;border-radius:6px;background:#253248;color:#c8dcff;font-size:12px;padding:3px 8px}
+.mobile-users{display:none;gap:10px}.user-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:14px}.user-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}.user-email{min-width:0;font-weight:650;overflow-wrap:anywhere}.user-id{font-size:12px;color:var(--muted);flex-shrink:0}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.user-meta-label{display:block;color:var(--muted);font-size:11px;margin-bottom:3px}.user-meta-value{display:block;overflow-wrap:anywhere;font-size:13px}
+.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.feature{min-width:0;padding:15px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}.feature strong{display:block;margin-bottom:5px}.feature span{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}.feature.disabled{opacity:.85}
+#error{color:var(--danger)}.empty{padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center}
+@media(max-width:760px){.topbar{padding:12px 16px}.admin-email{max-width:60vw}.page-heading{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics .metric:last-child{grid-column:1/-1}.features{grid-template-columns:1fr}.desktop-users{display:none}.mobile-users{display:grid}main{width:min(100% - 28px,1200px)}}
+@media(max-width:420px){.topbar{gap:8px}.brand-tag{display:block}.admin-email{font-size:11px;max-width:58vw}.btn{padding:8px 10px;min-height:40px;font-size:13px}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:23px}.metric-label{font-size:12px}.user-meta{gap:10px}.panel{padding:13px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-wrap"><div class="brand">AuraVision AI <span class="brand-tag">/ Admin</span></div><div class="admin-email" id="adminEmail">Checking administrator session…</div></div>
+  <button class="btn" id="logout" type="button">Sign out</button>
+</header>
+<main>
+  <div class="page-heading"><div><h1>Admin dashboard</h1><p class="intro">A private overview of registered accounts and current daily usage. Passwords and session tokens are never displayed.</p></div></div>
+  <section class="metrics" aria-label="Account summary">
+    <article class="metric"><span class="metric-label">Registered accounts</span><strong class="metric-value" id="totalUsers">—</strong><span class="metric-note">Accounts in the database</span></article>
+    <article class="metric"><span class="metric-label">Free plan</span><strong class="metric-value" id="freeUsers">—</strong><span class="metric-note">Users currently on Free</span></article>
+    <article class="metric"><span class="metric-label">Paid plans</span><strong class="metric-value" id="paidUsers">—</strong><span class="metric-note">Plus, Pro or Ultra</span></article>
+  </section>
+  <section class="panel">
+    <div class="panel-heading"><h2>Registered users</h2><button class="btn" id="refresh" type="button">Refresh list</button></div>
+    <p class="status" id="status" role="status" aria-live="polite">Loading user list…</p>
+    <div class="desktop-users tablewrap"><table><thead><tr><th>ID</th><th>Email</th><th>Created</th><th>Plan</th><th>Images left today</th><th>Videos left today</th></tr></thead><tbody id="users"></tbody></table></div>
+    <div class="mobile-users" id="mobileUsers" aria-label="Registered users"></div>
+  </section>
+  <section class="panel">
+    <h2>Administration tools</h2>
+    <div class="features">
+      <article class="feature"><strong>User account overview</strong><span>Available: view account email, join date, plan and remaining daily quota.</span></article>
+      <article class="feature disabled"><strong>Credit adjustments</strong><span>Not enabled yet. The current app uses plan-based daily limits, not a separate credit wallet.</span></article>
+      <article class="feature disabled"><strong>Discount coupons</strong><span>Not enabled yet. Checkout discounts must be enforced by the payment backend.</span></article>
+      <article class="feature disabled"><strong>Password reset</strong><span>Not enabled yet. A secure password-reset workflow must be implemented.</span></article>
+    </div>
+    <p class="status" id="error" role="status" aria-live="polite"></p>
+  </section>
 </main>
 <script>
-const statusEl=document.getElementById('status'),tbody=document.getElementById('users'),emailEl=document.getElementById('adminEmail'),errorEl=document.getElementById('error');
-async function load(){try{
-const me=await fetch('/api/admin/me',{credentials:'same-origin'});if(!me.ok){location.replace('/admin/login');return}
-const identity=await me.json();emailEl.textContent=identity.email||'Administrator';
-const response=await fetch('/api/admin/users',{credentials:'same-origin'});if(!response.ok)throw new Error('Unable to load user accounts.');
-const list=await response.json();tbody.replaceChildren();
-for(const user of list){const tr=document.createElement('tr');const values=[user.id,user.email,user.createdAt?new Date(user.createdAt).toLocaleString():'—',user.plan,user.imagesLeftToday,user.videosLeftToday];for(const value of values){const td=document.createElement('td');td.textContent=String(value??'—');tr.appendChild(td)}tbody.appendChild(tr)}
-statusEl.textContent=list.length+' registered account(s).';if(!list.length)statusEl.textContent='No registered accounts found.';
-}catch(error){statusEl.textContent='Could not load the dashboard.';errorEl.textContent=error.message||''}}
-document.getElementById('logout').addEventListener('click',async()=>{await fetch('/api/admin/logout',{method:'POST',credentials:'same-origin'});location.replace('/admin/login')});
-load();
-</script></body></html>
+const statusEl=document.getElementById('status');
+const tbody=document.getElementById('users');
+const mobileUsers=document.getElementById('mobileUsers');
+const emailEl=document.getElementById('adminEmail');
+const errorEl=document.getElementById('error');
+const totalUsersEl=document.getElementById('totalUsers');
+const freeUsersEl=document.getElementById('freeUsers');
+const paidUsersEl=document.getElementById('paidUsers');
+const makeCell=(tag,text,className)=>{const el=document.createElement(tag);el.textContent=String(text??'—');if(className)el.className=className;return el};
+function formatDate(value){if(!value)return '—';const date=new Date(value);return Number.isNaN(date.getTime())?'—':date.toLocaleString()}
+function addUserCard(user){
+  const card=document.createElement('article');card.className='user-card';
+  const head=document.createElement('div');head.className='user-card-head';
+  head.appendChild(makeCell('div',user.email,'user-email'));head.appendChild(makeCell('span','ID '+(user.id??'—'),'user-id'));card.appendChild(head);
+  const meta=document.createElement('div');meta.className='user-meta';
+  const fields=[['Created',formatDate(user.createdAt)],['Plan',user.plan],['Images left today',user.imagesLeftToday],['Videos left today',user.videosLeftToday]];
+  for(const [label,value] of fields){const item=document.createElement('div');item.appendChild(makeCell('span',label,'user-meta-label'));const valueEl=makeCell('span',value,'user-meta-value');if(label==='Plan')valueEl.className='user-meta-value plan';item.appendChild(valueEl);meta.appendChild(item)}
+  card.appendChild(meta);mobileUsers.appendChild(card);
+}
+async function loadUsers(){
+  statusEl.textContent='Loading user list…';errorEl.textContent='';
+  document.getElementById('refresh').disabled=true;
+  try{
+    const me=await fetch('/api/admin/me',{credentials:'same-origin'});
+    if(me.status===401){location.replace('/admin/login');return}
+    if(!me.ok)throw new Error('Could not verify administrator session.');
+    const identity=await me.json();emailEl.textContent=identity.email||'Administrator';
+    const response=await fetch('/api/admin/users',{credentials:'same-origin'});
+    if(response.status===401){location.replace('/admin/login');return}
+    if(!response.ok)throw new Error('Unable to load user accounts. Please refresh and try again.');
+    const list=await response.json();
+    if(!Array.isArray(list))throw new Error('The server returned an unexpected user list.');
+    tbody.replaceChildren();mobileUsers.replaceChildren();
+    let free=0,paid=0;
+    for(const user of list){
+      const plan=String(user.plan||'FREE').toUpperCase();
+      if(plan==='FREE')free++;else paid++;
+      const tr=document.createElement('tr');
+      const values=[user.id,user.email,formatDate(user.createdAt),plan,user.imagesLeftToday,user.videosLeftToday];
+      values.forEach((value,index)=>{const td=makeCell('td',value);if(index===3){td.replaceChildren(makeCell('span',value,'plan'))}tr.appendChild(td)});
+      tbody.appendChild(tr);addUserCard(user);
+    }
+    totalUsersEl.textContent=String(list.length);freeUsersEl.textContent=String(free);paidUsersEl.textContent=String(paid);
+    statusEl.textContent=list.length+' registered account'+(list.length===1?'':'s')+'.';
+    if(!list.length){const empty=makeCell('div','No registered accounts found.','empty');mobileUsers.appendChild(empty);statusEl.textContent='No registered accounts found.'}
+  }catch(error){statusEl.textContent='Could not load the dashboard.';errorEl.textContent=error.message||'Unexpected error.'}
+  finally{document.getElementById('refresh').disabled=false}
+}
+document.getElementById('refresh').addEventListener('click',loadUsers);
+document.getElementById('logout').addEventListener('click',async()=>{
+  const button=document.getElementById('logout');button.disabled=true;
+  try{await fetch('/api/admin/logout',{method:'POST',credentials:'same-origin'})}
+  finally{location.replace('/admin/login')}
+});
+loadUsers();
+</script>
+</body>
+</html>

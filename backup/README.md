@@ -4,9 +4,9 @@ This feature creates a local, incremental archive while your Windows laptop is o
 
 ## What is backed up
 
-- Account email, creation time, and internal owner ID. Password hashes and browser sessions are never exported.
+- Account email and creation time, plus a one-way SHA-256 owner reference for grouping related records. Raw owner tokens, password hashes, and browser sessions are never exported.
 - Generation prompts and metadata, plus generated media files still available on the server filesystem.
-- Allow-listed payment and subscription metadata. Card numbers, CVV, API secrets, Razorpay payment identifiers, and webhook secrets are not exported.
+- Allow-listed payment and subscription metadata. Card numbers, CVV, API secrets, Razorpay order/payment/subscription identifiers, and webhook secrets are not exported.
 - The laptop keeps an SQLite metadata archive and a media folder under %LOCALAPPDATA%\AuraVisionAI\backup.
 
 The laptop archive is append/upsert oriented: records removed from the cloud are not automatically deleted locally. This helps preserve history. It is a backup, not a live writable replica and not a full disaster-recovery restore system.

@@ -31,6 +31,7 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -61,7 +62,7 @@ public class BackupController {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", user.getId());
             row.put("email", user.getEmail());
-            row.put("ownerId", user.getOwnerToken());
+            row.put("ownerRef", ownerReference(user.getOwnerToken()));
             row.put("createdAt", user.getCreatedAt());
             userRows.add(row);
         }
@@ -78,7 +79,7 @@ public class BackupController {
             row.put("model", g.getModel());
             row.put("status", g.getStatus());
             row.put("mimeType", g.getMimeType());
-            row.put("ownerId", g.getOwnerToken());
+            row.put("ownerRef", ownerReference(g.getOwnerToken()));
             row.put("createdAt", g.getCreatedAt());
             row.put("updatedAt", g.getUpdatedAt());
             String mediaName = null;
@@ -103,8 +104,7 @@ public class BackupController {
         for (Payment p : payments.findAll()) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", p.getId());
-            row.put("orderId", p.getOrderId());
-            row.put("ownerId", p.getOwnerToken());
+            row.put("ownerRef", ownerReference(p.getOwnerToken()));
             row.put("plan", p.getPlan());
             row.put("yearly", p.isYearly());
             row.put("amountRupees", p.getAmountRupees());
@@ -120,7 +120,7 @@ public class BackupController {
         for (Subscription s : subscriptions.findAll()) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", s.getId());
-            row.put("ownerId", s.getOwnerToken());
+            row.put("ownerRef", ownerReference(s.getOwnerToken()));
             row.put("plan", s.getPlan());
             row.put("email", s.getEmail());
             row.put("status", s.getStatus());
@@ -170,6 +170,16 @@ public class BackupController {
                 .header(HttpHeaders.PRAGMA, "no-cache")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"auravision-backup.zip\"")
                 .body(body);
+    }
+
+    private static String ownerReference(String ownerToken) {
+        if (ownerToken == null) return null;
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(ownerToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not create a pseudonymous owner reference.", e);
+        }
     }
 
     private void verifyRequest(HttpServletRequest request) {

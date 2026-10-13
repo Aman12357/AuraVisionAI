@@ -19,5 +19,5 @@ Register-ScheduledTask -TaskName "AuraVisionAI-Laptop-Backup" -Action $Action -T
 Write-Host ""
 Write-Host "Installed. The task starts when you sign in to Windows."
 Write-Host "The local archive is under: $env:LOCALAPPDATA\AuraVisionAI\backup"
-Write-Host "Before sync can succeed, set BACKUP_API_TOKEN in Render and deploy the backup-enabled branch."
+Write-Host "The Render service must have BACKUP_API_TOKEN set before the first sync can succeed."
 Write-Host "To test manually: py .\backup\sync_auravision.py --once"

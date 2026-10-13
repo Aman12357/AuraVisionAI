@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -42,7 +41,6 @@ public class GenerationService {
     private final AccountUserRepository users;
     @Value("${app.max-active-jobs}") private int maxActive;
 
-    @Transactional
     public Generation submit(String owner, Generation.Type type, String prompt, String ratio, String requestedModel) {
         String selectedModel = type == Generation.Type.IMAGE
                 ? (requestedModel == null || requestedModel.isBlank() ? CloudflareImageClient.MODEL_KEY : requestedModel.trim())

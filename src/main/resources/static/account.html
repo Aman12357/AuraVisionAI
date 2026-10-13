@@ -67,6 +67,11 @@
     .plan-price { font-size:25px; font-weight:700; letter-spacing:-.03em; }
     .plan-card .small { min-height:38px; color:var(--muted); }
     .plan-card button { width:100%; margin-top:8px; }
+    .coupon-row { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto; align-items:end; gap:12px; margin:12px 0 4px; }
+    .coupon-field { min-width:0; margin-top:0; }
+    .coupon-field select { width:100%; border:1px solid var(--line); background:var(--input-bg); color:var(--text); border-radius:10px; padding:12px 13px; font:inherit; min-height:48px; }
+    .coupon-action { padding-bottom:0; }
+    #couponStatus { margin:8px 0 14px; overflow-wrap:anywhere; }
     .history { display:flex; flex-direction:column; }
     .history-row { display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:14px 0; border-bottom:1px solid var(--line); }
     .history-row:last-child { border-bottom:0; }
@@ -76,6 +81,8 @@
     :root[data-theme="light"] .plan-badge { background:#e3ecff; color:#1e40af; }
     @media(max-width:760px) {
       .auth-grid,.plans { grid-template-columns:1fr; }
+      .coupon-row { grid-template-columns:1fr; gap:8px; }
+      .coupon-action button { width:100%; }
       .panel { padding:18px; }
       .wrap { margin-top:28px; }
       .nav { flex-wrap:wrap; padding:12px 0; }
@@ -133,6 +140,12 @@
         <label><input type="radio" name="billing" value="monthly" checked> Monthly</label>
         <label><input type="radio" name="billing" value="yearly"> Yearly (15% saving)</label>
       </fieldset>
+      <div class="coupon-row">
+        <div class="field coupon-field"><label for="couponInput">Discount coupon</label><input id="couponInput" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Enter coupon code"></div>
+        <div class="field coupon-field"><label for="couponPlan">Apply to plan</label><select id="couponPlan"><option value="">Choose a plan</option></select></div>
+        <div class="coupon-action"><button id="applyCoupon" class="secondary" type="button">Apply coupon</button></div>
+      </div>
+      <p class="muted small" id="couponStatus" role="status" aria-live="polite">Coupons are validated by AuraVision's server. The discounted recurring price is shown in Razorpay Checkout.</p>
       <div id="planCards" class="plans"></div>
       <div id="checkoutMessage" class="status hidden" role="status"></div>
     </div>
@@ -152,6 +165,8 @@
   var account = null;
   var config = { ready:false, databaseReady:false, razorpayConfigured:false, message:"Loading payment configuration…" };
   var plans = [];
+  var couponCode = "";
+  var couponQuote = null;
   var authMode = new URLSearchParams(window.location.search).get("mode") === "login" ? "login" : "register";
   var authForm = document.getElementById("authForm");
   var submitButton = document.getElementById("authSubmit");
@@ -244,7 +259,37 @@
   });
 
   document.querySelectorAll('input[name="billing"]').forEach(function (radio) {
-    radio.addEventListener("change", renderPlans);
+    radio.addEventListener("change", function () { clearCoupon("Billing period changed. Apply the coupon again."); renderPlans(); });
+  });
+
+  function clearCoupon(message) {
+    couponCode = "";
+    couponQuote = null;
+    var status = document.getElementById("couponStatus");
+    if (status) { status.textContent = message || "Coupons are validated by AuraVision's server. The discounted recurring price is shown in Razorpay Checkout."; status.className = "muted small"; }
+  }
+
+  document.getElementById("applyCoupon").addEventListener("click", async function () {
+    var code = document.getElementById("couponInput").value.trim().toUpperCase();
+    var planId = document.getElementById("couponPlan").value;
+    var plan = plans.find(function (item) { return item.id === planId; });
+    var yearly = document.querySelector('input[name="billing"]:checked').value === "yearly";
+    var status = document.getElementById("couponStatus");
+    if (!code) { clearCoupon("Enter a coupon code first."); status.className = "status bad"; return; }
+    if (!plan) { clearCoupon("Choose the plan you want to apply the coupon to."); status.className = "status warn"; return; }
+    this.disabled = true;
+    status.textContent = "Validating coupon…"; status.className = "muted small";
+    try {
+      var quote = await api("/api/checkout/coupons/validate", "POST", { code:code, plan:plan.id, yearly:yearly });
+      couponCode = quote.code;
+      couponQuote = quote;
+      status.textContent = quote.code + " applied: " + quote.discountPercent + "% off " + money(quote.originalAmountRupees) + ". Discounted recurring amount: " + money(quote.discountedAmountRupees) + ". Razorpay will confirm the charge.";
+      status.className = "status good";
+    } catch (error) {
+      couponCode = ""; couponQuote = null;
+      status.textContent = error.message || "Coupon could not be applied.";
+      status.className = "status bad";
+    } finally { this.disabled = false; }
   });
 
   async function loadConfigAndPlans() {
@@ -265,6 +310,16 @@
     container.replaceChildren();
     var billingRadio = document.querySelector('input[name="billing"]:checked');
     var yearly = billingRadio && billingRadio.value === "yearly";
+    var couponPlanSelect = document.getElementById("couponPlan");
+    var selectedCouponPlan = couponPlanSelect.value;
+    couponPlanSelect.replaceChildren();
+    var placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Choose a plan";
+    couponPlanSelect.appendChild(placeholder);
+    plans.forEach(function (plan) {
+      var option = document.createElement("option"); option.value = plan.id; option.textContent = plan.name;
+      couponPlanSelect.appendChild(option);
+    });
+    if (plans.some(function (plan) { return plan.id === selectedCouponPlan; })) couponPlanSelect.value = selectedCouponPlan;
     plans.forEach(function (plan) {
       var card = document.createElement("div"); card.className = "plan-card";
       var title = document.createElement("h3"); title.textContent = plan.name;
@@ -298,7 +353,8 @@
     button.disabled = true;
     button.textContent = "Preparing secure checkout…";
     try {
-      var checkout = await api("/api/checkout/subscriptions", "POST", { plan:planId, yearly:yearly });
+      var appliedCoupon = couponCode && couponQuote && couponQuote.code === couponCode ? couponCode : null;
+      var checkout = await api("/api/checkout/subscriptions", "POST", { plan:planId, yearly:yearly, couponCode:appliedCoupon });
       var options = {
         key:checkout.keyId,
         subscription_id:checkout.subscriptionId,

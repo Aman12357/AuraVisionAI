@@ -2074,6 +2074,12 @@
       renderExploreGallery();
       updateDashboard();
 
+      // Let internal links open a specific Studio view (Explore, My Creations, or Dashboard).
+      const requestedTab = new URLSearchParams(window.location.search).get('tab');
+      if (['creations', 'explore', 'dashboard'].includes(requestedTab)) {
+        switchTab(requestedTab);
+      }
+
       window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
         if (e.key === 'Escape') {

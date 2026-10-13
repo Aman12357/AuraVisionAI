@@ -15,7 +15,7 @@
   })();
 </script>
   <meta name="description"
-    content="Aura Vision AI Studio — Create, generate, remix, and manage AI visuals powered by Google Gemini and Aura Diffusion.">
+    content="AuraVision AI Studio — Create, generate, remix, and manage AI visuals with AuraVision AI.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1518,7 +1518,7 @@
               <span>⚡</span> Generation Engine
             </div>
             <div class="engine-toggle-wrap" aria-label="Generation provider">
-              <span class="engine-btn active" style="cursor:default;">Google Gemini Image API</span>
+              <span class="engine-btn active" style="cursor:default;">AuraVision AI Image Engine</span>
             </div>
           </div>
 
@@ -1530,8 +1530,8 @@
                 <button class="tool-btn-sm" onclick="inspirePrompt()" title="Generate random inspiration prompt">
                   🎲 Inspire
                 </button>
-                <button class="tool-btn-sm" onclick="enhancePrompt()" title="Rewrite this prompt with Gemini 3.8 Flash">
-                  ✨ Gemini 3.8 Enhance
+                <button class="tool-btn-sm" onclick="enhancePrompt()" title="Enhance this prompt with AuraVision AI">
+                  ✨ AuraVision Enhance
                 </button>
               </div>
             </div>
@@ -1546,19 +1546,19 @@
             </div>
           </div>
 
-          <!-- Real Gemini image model selector -->
+          <!-- AuraVision image mode selector; option values remain backend model identifiers. -->
           <div class="setting-section" id="imageModelSection">
             <div class="setting-title">
-              <label for="imageModelSelect">Image Generation Provider</label>
+              <label for="imageModelSelect">Image Generation Mode</label>
               <span style="font-weight:500;color:var(--muted);">Real AI</span>
             </div>
             <select class="input-field" id="imageModelSelect" aria-label="Choose image generation provider">
-              <option value="cloudflare-flux-schnell" selected>Cloudflare FLUX.1 Schnell · Free daily allowance</option>
-              <option value="gemini-3.1-flash-image">Google Nano Banana 2 · Billing/quota required</option>
-              <option value="gemini-3-pro-image">Google Nano Banana Pro · Billing/quota required</option>
-              <option value="gemini-3.1-flash-lite-image">Google Nano Banana 2 Lite · Billing/quota required</option>
+              <option value="cloudflare-flux-schnell" selected>AuraVision AI Fast · Free daily allowance</option>
+              <option value="gemini-3.1-flash-image">AuraVision AI Standard · Provider quota may apply</option>
+              <option value="gemini-3-pro-image">AuraVision AI Pro · Provider quota may apply</option>
+              <option value="gemini-3.1-flash-lite-image">AuraVision AI Lite · Provider quota may apply</option>
             </select>
-            <p style="font-size:11px;color:var(--muted);margin-top:6px;">Default: Cloudflare FLUX.1 Schnell. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN under Render → Environment before generating. Secrets stay on the server. Cloudflare's free daily AI allocation applies.</p>
+            <p style="font-size:11px;color:var(--muted);margin-top:6px;">Default: AuraVision AI Fast. Available image modes and daily limits depend on server-side provider configuration. API credentials stay on the server.</p>
           </div>
 
           <!-- Style Presets -->
@@ -1764,7 +1764,7 @@
           </p>
           <ul style="font-size: 13px; color: var(--muted); margin-bottom: 20px; list-style: none; display: flex; flex-direction: column; gap: 8px;">
             <li>✓ Unlimited Ultra generations</li>
-            <li>✓ Gemini Vision Multimodal 1.5 Pro</li>
+            <li>✓ Enhanced AI visual understanding</li>
             <li>✓ Private cloud synchronization</li>
             <li>✓ Custom LoRA style models</li>
           </ul>
@@ -2191,7 +2191,7 @@
       currentEngine = eng;
       document.getElementById('engineAura').classList.toggle('active', eng === 'aura');
       document.getElementById('engineGemini').classList.toggle('active', eng === 'gemini');
-      showToast(`Switched inference to ${eng === 'aura' ? 'Aura Diffusion 3.2' : 'Gemini Multimodal Vision'}`, 'info');
+      showToast(`Switched inference to ${eng === 'aura' ? 'AuraVision AI Diffusion' : 'AuraVision AI'}`, 'info');
     }
 
     function toggleAccordion(id) {
@@ -2212,11 +2212,19 @@
       showToast('Loaded inspiration prompt!', 'info');
     }
 
+    function brandProviderText(message) {
+      return String(message || '')
+        .replace(/google\s+gemini/gi, 'AuraVision AI')
+        .replace(/gemini-[a-z0-9.-]+/gi, 'AuraVision AI')
+        .replace(/\bgemini\b/gi, 'AuraVision AI')
+        .replace(/\bnano banana\b/gi, 'AuraVision AI');
+    }
+
     async function enhancePrompt() {
       const input = document.getElementById('promptInput');
       const current = input.value.trim();
       if (!current) {
-        showToast('Enter an image description first, then use Gemini 3.8 Enhance.', 'danger');
+        showToast('Enter an image description first, then use AuraVision Enhance.', 'danger');
         input.focus();
         return;
       }
@@ -2225,7 +2233,7 @@
       const originalButtonHtml = button ? button.innerHTML : '';
       if (button) {
         button.disabled = true;
-        button.innerHTML = '⏳ Gemini 3.8…';
+        button.innerHTML = '⏳ AuraVision AI…';
       }
 
       try {
@@ -2242,13 +2250,13 @@
         }
 
         const enhanced = typeof data.enhancedPrompt === 'string' ? data.enhancedPrompt.trim() : '';
-        if (!enhanced) throw new Error('Gemini 3.8 returned an empty prompt. Please try again.');
+        if (!enhanced) throw new Error('AuraVision AI returned an empty enhanced prompt. Please try again.');
 
         input.value = enhanced;
         updatePromptCount();
-        showToast('Prompt enhanced with Gemini 3.8 Flash.', 'success');
+        showToast('Prompt enhanced with AuraVision AI.', 'success');
       } catch (error) {
-        showToast(error && error.message ? error.message : 'Gemini 3.8 prompt enhancement failed.', 'danger');
+        showToast(brandProviderText(error && error.message ? error.message : 'AuraVision AI prompt enhancement failed.'), 'danger');
       } finally {
         if (button) {
           button.disabled = false;
@@ -2369,7 +2377,7 @@
       updateGenerateBtn(true);
       renderSkeletons(requestedCount);
       document.getElementById('stageStatusTitle').textContent = 'Generating real AI images';
-      document.getElementById('stageStatsText').textContent = 'Sending your prompt to Google Gemini…';
+      document.getElementById('stageStatsText').textContent = 'Sending your prompt to AuraVision AI…';
 
       try {
         for (let i = 0; i < requestedCount; i++) {
@@ -2412,11 +2420,11 @@
             }
             job = await statusResponse.json();
             document.getElementById('stageStatsText').textContent =
-              'Gemini model: ' + model + ' · Image ' + (i + 1) + ' of ' + requestedCount + ' · ' + String(job.status || 'PROCESSING').toLowerCase();
+              'AuraVision AI · Image ' + (i + 1) + ' of ' + requestedCount + ' · ' + String(job.status || 'PROCESSING').toLowerCase();
           }
 
           if (job.status !== 'DONE') {
-            if (job.status === 'FAILED') throw new Error(job.error || 'Gemini image generation failed.');
+            if (job.status === 'FAILED') throw new Error(job.error || 'AuraVision AI image generation failed.');
             throw new Error('Image generation timed out after 2 minutes. Please try again.');
           }
 
@@ -2429,7 +2437,7 @@
             style: currentStyle,
             aspectRatio: aspectRatio,
             quality: currentQuality,
-            engine: 'Google Gemini',
+            engine: 'AuraVision AI',
             model: job.model || model,
             seed: baseSeed + i * 17,
             createdAt: job.createdAt || new Date().toISOString(),
@@ -2445,16 +2453,16 @@
 
         const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
         document.getElementById('stageStatusTitle').textContent = 'Generated ' + newImages.length + ' real AI image' + (newImages.length === 1 ? '' : 's');
-        document.getElementById('stageStatsText').textContent = 'Completed in ' + elapsedTime + 's · ' + model;
+        document.getElementById('stageStatsText').textContent = 'Completed in ' + elapsedTime + 's · AuraVision AI';
         renderSessionGrid();
         updateDashboard();
-        showToast('Successfully generated ' + newImages.length + ' image(s) with Google Gemini!', 'success');
+        showToast('AuraVision AI generated ' + newImages.length + ' image(s) successfully!', 'success');
       } catch (error) {
-        console.error('Real Gemini image generation failed:', error);
+        console.error('AuraVision AI image generation request failed:', error);
         renderSessionGrid();
         document.getElementById('stageStatusTitle').textContent = 'Image generation failed';
-        document.getElementById('stageStatsText').textContent = error.message || 'An unexpected error occurred.';
-        showToast(error.message || 'Image generation failed. Check server logs and Gemini quota.', 'danger');
+        document.getElementById('stageStatsText').textContent = brandProviderText(error && error.message ? error.message : 'An unexpected error occurred.');
+        showToast(brandProviderText(error && error.message ? error.message : 'Image generation failed. Please try again or check service availability.'), 'danger');
       } finally {
         isGenerating = false;
         updateGenerateBtn(false);

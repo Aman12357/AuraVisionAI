@@ -1,7 +1,9 @@
 package com.auravision.service;
 
+import com.auravision.model.AccountUser;
 import com.auravision.model.Generation;
 import com.auravision.model.Plan;
+import com.auravision.repo.AccountUserRepository;
 import com.auravision.repo.GenerationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,7 @@ public class GenerationService {
     private final GenerationRepository repo;
     private final GenerationWorker worker;
     private final BillingService billing;
+    private final AccountUserRepository users;
     @Value("${app.max-active-jobs}") private int maxActive;
 
     public Generation submit(String owner, Generation.Type type, String prompt, String ratio, String requestedModel) {
@@ -50,11 +53,15 @@ public class GenerationService {
 
         Plan plan = billing.planFor(owner);
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
-        if (limit == 0)
-            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "Video generation needs a paid plan. Choose Upgrade to continue.");
-        if (usedToday(owner, type) >= limit)
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                    "Daily limit reached (" + limit + " per day on the " + plan + " plan). It resets at midnight UTC.");
+        long used = usedToday(owner, type);
+        if (used >= limit) {
+            if (!consumeBonusCredit(owner, type)) {
+                if (limit == 0)
+                    throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "Video generation needs a paid plan or an available bonus video credit.");
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                        "Daily limit reached (" + limit + " per day on the " + plan + " plan). It resets at midnight UTC.");
+            }
+        }
 
         Generation g = new Generation();
         g.setOwnerToken(owner);
@@ -69,10 +76,29 @@ public class GenerationService {
 
     public Usage usage(String owner) {
         Plan p = billing.planFor(owner);
+        AccountUser user = users.findByOwnerToken(owner).orElse(null);
+        int bonusImages = user == null ? 0 : user.getBonusImageCredits();
+        int bonusVideos = user == null ? 0 : user.getBonusVideoCredits();
         return new Usage(p,
-                (int) Math.max(0, p.imagesPerDay - usedToday(owner, Generation.Type.IMAGE)),
-                (int) Math.max(0, p.videosPerDay - usedToday(owner, Generation.Type.VIDEO)),
+                (int) Math.max(0, p.imagesPerDay - usedToday(owner, Generation.Type.IMAGE)) + bonusImages,
+                (int) Math.max(0, p.videosPerDay - usedToday(owner, Generation.Type.VIDEO)) + bonusVideos,
                 billing.expiry(owner).orElse(null));
+    }
+
+    private boolean consumeBonusCredit(String owner, Generation.Type type) {
+        AccountUser user = users.findByOwnerToken(owner).orElse(null);
+        if (user == null) return false;
+        if (type == Generation.Type.IMAGE && user.getBonusImageCredits() > 0) {
+            user.setBonusImageCredits(user.getBonusImageCredits() - 1);
+            users.save(user);
+            return true;
+        }
+        if (type == Generation.Type.VIDEO && user.getBonusVideoCredits() > 0) {
+            user.setBonusVideoCredits(user.getBonusVideoCredits() - 1);
+            users.save(user);
+            return true;
+        }
+        return false;
     }
 
     public List<Generation> latest(String owner) { return repo.findTop30ByOwnerTokenOrderByCreatedAtDesc(owner); }

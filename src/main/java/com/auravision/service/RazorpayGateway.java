@@ -27,21 +27,25 @@ public class RazorpayGateway {
     public String publicKeyId() { requireConfigured(); return keyId.trim(); }
 
     public void requireConfigured() {
-        if (!isConfigured()) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                "Razorpay is not configured. In Render Environment set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET. Keep secret values private.");
-        }
+        if (!isConfigured()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+            "Razorpay is not configured. In Render Environment set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET. Keep secret values private.");
     }
 
     public String createPlan(Plan plan, boolean yearly) {
+        return createPlan(plan, yearly, plan.price(yearly));
+    }
+
+    public String createPlan(Plan plan, boolean yearly, int amountRupees) {
         requireConfigured();
+        if (plan == null || plan == Plan.FREE || amountRupees < 1)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A paid plan and positive price are required.");
         String period = yearly ? "yearly" : "monthly";
         Map<String, Object> request = Map.of(
             "period", period,
             "interval", 1,
             "item", Map.of(
                 "name", "AuraVision AI " + title(plan.name()) + " " + period,
-                "amount", Math.multiplyExact(plan.price(yearly), 100),
+                "amount", Math.multiplyExact(amountRupees, 100),
                 "currency", "INR",
                 "description", "AuraVision AI " + title(plan.name()) + " recurring subscription"
             ),
@@ -115,9 +119,7 @@ public class RazorpayGateway {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             return HexFormat.of().formatHex(mac.doFinal(message));
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to verify payment signature.", e);
-        }
+        } catch (Exception e) { throw new IllegalStateException("Unable to verify payment signature.", e); }
     }
     private static boolean constantTimeEquals(String a, String b) {
         return MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII), b.getBytes(StandardCharsets.US_ASCII));

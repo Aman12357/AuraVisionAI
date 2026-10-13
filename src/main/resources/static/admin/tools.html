@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b0d12">
+<title>Admin Tools | AuraVision AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--panel2:#10131b;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff;--good:#78e0b0;--bad:#ffb4b4}
+*{box-sizing:border-box}html{min-width:320px;scroll-behavior:smooth}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+header{position:sticky;top:0;z-index:4;background:#0b0d12ed;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{width:min(1200px,calc(100% - 32px));margin:auto;min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:19px;font-weight:750;letter-spacing:-.03em}.brand span{color:var(--muted);font-size:13px;font-weight:500}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);text-decoration:none;white-space:nowrap}.btn.primary{background:var(--text);color:#10131b;border-color:var(--text);font-weight:700}.btn:hover{border-color:#66748b}
+main{width:min(1200px,calc(100% - 32px));margin:auto;padding:clamp(22px,4vw,40px) 0 54px}
+h1{font-size:clamp(27px,4vw,36px);line-height:1.15;letter-spacing:-.04em;margin:0}h2{font-size:19px;margin:0 0 7px}p{margin:0}.muted{color:var(--muted)}.intro{margin-top:8px;max-width:720px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}.panel{min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:clamp(15px,2.5vw,22px)}.panel.wide{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#0c0f16;color:var(--text)}
+.formrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.form-actions button{min-height:44px}
+.status{margin-top:12px;color:var(--muted);font-size:13px;overflow-wrap:anywhere;white-space:pre-wrap}.status.good{color:var(--good)}.status.bad{color:var(--bad)}
+.note{font-size:12px;color:var(--muted);margin-top:8px}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}table{width:100%;min-width:720px;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:11px;border-bottom:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}th{background:var(--panel2);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}tr:last-child td{border-bottom:0}
+.cards{display:none;gap:10px;margin-top:12px}.card{min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card strong{overflow-wrap:anywhere}.pill{display:inline-flex;padding:3px 7px;border-radius:6px;border:1px solid #34435b;color:#c8dcff;background:#253248;font-size:12px}.card-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.meta-label{display:block;font-size:11px;color:var(--muted)}.meta-value{display:block;font-size:13px;overflow-wrap:anywhere}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.panel.wide{grid-column:auto}.desktop-table{display:none}.cards{display:grid}.nav{min-height:60px}.brand span{display:block}.formrow{grid-template-columns:1fr}}
+@media(max-width:400px){.nav{width:calc(100% - 22px)}main{width:calc(100% - 22px)}.nav .actions{gap:5px}.btn{padding:8px 9px;font-size:13px}.brand{font-size:16px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="brand">AuraVision AI <span>/ Admin tools</span></div><div class="actions"><a class="btn" href="/admin/dashboard.html">Dashboard</a><button class="btn" id="logout" type="button">Sign out</button></div></div></header>
+<main>
+  <h1>User management</h1><p class="intro">Manage bonus image/video credits, reset account passwords, and create or disable checkout coupon codes. Every change is checked by the server and stored in the database.</p>
+  <p class="status" id="pageStatus" role="status" aria-live="polite">Checking admin session…</p>
+  <div class="grid">
+    <section class="panel">
+      <h2>Adjust user credits</h2><p class="muted">Positive values add bonus credits; negative values remove credits. Changes affect generation quotas immediately.</p>
+      <label for="creditUser">User account</label><select id="creditUser"><option value="">Loading users…</option></select>
+      <div class="formrow"><div><label for="imageDelta">Image credit change</label><input id="imageDelta" type="number" min="-10000" max="10000" step="1" value="0"></div><div><label for="videoDelta">Video credit change</label><input id="videoDelta" type="number" min="-10000" max="10000" step="1" value="0"></div></div>
+      <div class="form-actions"><button class="btn primary" id="saveCredits" type="button">Save credit changes</button></div>
+      <p class="note">Example: enter 20 images and 5 videos to grant those bonus credits. A balance cannot go below zero.</p><p class="status" id="creditStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section class="panel">
+      <h2>Reset user password</h2><p class="muted">Set a new password for the selected account. All existing sessions for that user are revoked after the change.</p>
+      <label for="passwordUser">User account</label><select id="passwordUser"><option value="">Loading users…</option></select>
+      <label for="newPassword">New password</label><input id="newPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" placeholder="At least 10 characters">
+      <div class="form-actions"><button class="btn primary" id="resetPassword" type="button">Reset password</button></div>
+      <p class="note">Passwords are never shown in the admin panel. Share the new password securely with the account owner.</p><p class="status" id="passwordStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section class="panel">
+      <h2>Create discount coupon</h2><p class="muted">Coupons are validated on the server and create a discounted Razorpay recurring plan when applied at checkout.</p>
+      <label for="couponCode">Coupon code</label><input id="couponCode" type="text" maxlength="40" placeholder="WELCOME20" autocapitalize="characters" autocomplete="off">
+      <div class="formrow"><div><label for="discountPercent">Discount percent (1–90)</label><input id="discountPercent" type="number" min="1" max="90" step="1" value="10"></div><div><label for="maxRedemptions">Maximum checkouts (optional)</label><input id="maxRedemptions" type="number" min="1" step="1" placeholder="Unlimited"></div></div>
+      <label for="couponExpiry">Expiry (optional)</label><input id="couponExpiry" type="datetime-local">
+      <div class="form-actions"><button class="btn primary" id="createCoupon" type="button">Create coupon</button></div>
+      <p class="note">Discounts affect the recurring price for that subscription. A coupon use is reserved when a provider checkout is created; abandoned checkouts can therefore consume a limited use.</p><p class="status" id="couponStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section class="panel">
+      <h2>Coupon management</h2><p class="muted">Disable a coupon to prevent it being used on future checkouts. Existing subscriptions retain their agreed recurring price.</p>
+      <div class="form-actions"><button class="btn" id="refreshCoupons" type="button">Refresh coupons</button></div>
+      <p class="status" id="couponListStatus" role="status" aria-live="polite">Loading coupons…</p>
+      <div class="desktop-table tablewrap"><table><thead><tr><th>Code</th><th>Discount</th><th>Status</th><th>Uses</th><th>Expiry</th><th>Action</th></tr></thead><tbody id="couponTable"></tbody></table></div>
+      <div class="cards" id="couponCards"></div>
+    </section>
+    <section class="panel wide">
+      <h2>Registered accounts</h2><p class="muted">Account overview includes remaining daily quota and bonus credit balances. Password hashes and session tokens are not exposed.</p>
+      <label for="userSearch">Search accounts</label><input id="userSearch" type="search" placeholder="Search by email or ID">
+      <p class="status" id="usersStatus" role="status" aria-live="polite">Loading accounts…</p>
+      <div class="desktop-table tablewrap"><table><thead><tr><th>ID</th><th>Email</th><th>Plan</th><th>Images left</th><th>Videos left</th><th>Bonus image credits</th><th>Bonus video credits</th><th>Created</th></tr></thead><tbody id="userTable"></tbody></table></div>
+      <div class="cards" id="userCards"></div>
+    </section>
+  </div>
+</main>
+<script>
+(function(){
+  "use strict";
+  var users=[];
+  var coupons=[];
+  var pageStatus=document.getElementById("pageStatus");
+  function el(tag,text,cls){var node=document.createElement(tag);node.textContent=String(text==null?"—":text);if(cls)node.className=cls;return node}
+  function date(value){if(!value)return "No expiry";var d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleString()}
+  function message(id,text,kind){var node=document.getElementById(id);node.textContent=text||"";node.className="status"+(kind?" "+kind:"")}
+  async function api(url,method,body){var opts={method:method||"GET",credentials:"same-origin",headers:{"Accept":"application/json"}};if(body!==undefined){opts.headers["Content-Type"]="application/json";opts.body=JSON.stringify(body)}var res=await fetch(url,opts);var data=await res.json().catch(function(){return {}});if(res.status===401){location.replace("/admin/login");throw new Error("Admin session expired.")}if(!res.ok)throw new Error(data.message||data.error||("Request failed (HTTP "+res.status+")."));return data}
+  function userLabel(user){return "#"+user.id+" · "+user.email+" · "+user.plan+" · bonus "+user.bonusImageCredits+" img / "+user.bonusVideoCredits+" video"}
+  function renderUserSelects(){["creditUser","passwordUser"].forEach(function(id){var select=document.getElementById(id);var prior=select.value;select.replaceChildren();select.appendChild(el("option","Choose a user"));select.options[0].value="";users.forEach(function(user){var opt=el("option",userLabel(user));opt.value=String(user.id);select.appendChild(opt)});if(users.some(function(user){return String(user.id)===prior}))select.value=prior})}
+  function renderUsers(){
+    var q=document.getElementById("userSearch").value.trim().toLowerCase();
+    var filtered=users.filter(function(u){return String(u.id).includes(q)||u.email.toLowerCase().includes(q)});
+    var table=document.getElementById("userTable"),cards=document.getElementById("userCards");table.replaceChildren();cards.replaceChildren();
+    filtered.forEach(function(u){
+      var tr=document.createElement("tr");[u.id,u.email,u.plan,u.imagesLeftToday,u.videosLeftToday,u.bonusImageCredits,u.bonusVideoCredits,date(u.createdAt)].forEach(function(v){tr.appendChild(el("td",v))});table.appendChild(tr);
+      var card=document.createElement("article");card.className="card";var head=document.createElement("div");head.className="card-head";head.append(el("strong",u.email),el("span","#"+u.id,"pill"));card.appendChild(head);
+      var meta=document.createElement("div");meta.className="card-meta";
+      [["Plan",u.plan],["Images left",u.imagesLeftToday],["Videos left",u.videosLeftToday],["Bonus images",u.bonusImageCredits],["Bonus videos",u.bonusVideoCredits],["Created",date(u.createdAt)]].forEach(function(pair){var cell=document.createElement("div");cell.append(el("span",pair[0],"meta-label"),el("span",pair[1],"meta-value"));meta.appendChild(cell)});
+      card.appendChild(meta);cards.appendChild(card);
+    });
+    message("usersStatus",filtered.length+" account(s) shown.");
+  }
+  async function loadUsers(){try{users=await api("/api/admin/users");renderUserSelects();renderUsers();message("pageStatus","Signed in as "+(await api("/api/admin/me")).email,"good")}catch(e){message("usersStatus",e.message,"bad")}}
+  function couponRow(c){
+    var tr=document.createElement("tr");
+    [c.code,c.discountPercent+"%",c.active?"Active":"Disabled",(c.redeemedCount||0)+(c.maxRedemptions==null?" / ∞":" / "+c.maxRedemptions),date(c.expiresAt)].forEach(function(v){tr.appendChild(el("td",v))});
+    var action=el("button",c.active?"Disable":"Enable","btn");action.type="button";action.addEventListener("click",async function(){action.disabled=true;try{await api("/api/admin/coupons/"+c.id+"/active","POST",{active:!c.active});await loadCoupons()}catch(e){message("couponListStatus",e.message,"bad")}finally{action.disabled=false}});var td=document.createElement("td");td.appendChild(action);tr.appendChild(td);return tr;
+  }
+  async function loadCoupons(){
+    var table=document.getElementById("couponTable"),cards=document.getElementById("couponCards");table.replaceChildren();cards.replaceChildren();
+    try{coupons=await api("/api/admin/coupons");coupons.forEach(function(c){table.appendChild(couponRow(c));var card=document.createElement("article");card.className="card";var head=document.createElement("div");head.className="card-head";head.append(el("strong",c.code),el("span",c.active?"Active":"Disabled","pill"));card.appendChild(head);var meta=document.createElement("div");meta.className="card-meta";[["Discount",c.discountPercent+"%"],["Uses",(c.redeemedCount||0)+(c.maxRedemptions==null?" / unlimited":" / "+c.maxRedemptions)],["Expiry",date(c.expiresAt)]].forEach(function(p){var cell=document.createElement("div");cell.append(el("span",p[0],"meta-label"),el("span",p[1],"meta-value"));meta.appendChild(cell)});card.appendChild(meta);var button=el("button",c.active?"Disable coupon":"Enable coupon","btn");button.type="button";button.style.marginTop="12px";button.addEventListener("click",async function(){button.disabled=true;try{await api("/api/admin/coupons/"+c.id+"/active","POST",{active:!c.active});await loadCoupons()}catch(e){message("couponListStatus",e.message,"bad")}finally{button.disabled=false}});card.appendChild(button);cards.appendChild(card)});message("couponListStatus",coupons.length+" coupon(s) found.");if(!coupons.length)message("couponListStatus","No coupons yet. Create one above.")}catch(e){message("couponListStatus",e.message,"bad")}
+  }
+  document.getElementById("userSearch").addEventListener("input",renderUsers);
+  document.getElementById("saveCredits").addEventListener("click",async function(){var id=document.getElementById("creditUser").value;var imageDelta=Number(document.getElementById("imageDelta").value||0),videoDelta=Number(document.getElementById("videoDelta").value||0);if(!id){message("creditStatus","Choose a user first.","bad");return}if(!Number.isInteger(imageDelta)||!Number.isInteger(videoDelta)||imageDelta===0&&videoDelta===0){message("creditStatus","Enter a non-zero whole-number adjustment.","bad");return}this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/credits","POST",{imageDelta:imageDelta,videoDelta:videoDelta});message("creditStatus","Saved. Bonus balances: "+result.bonusImageCredits+" image and "+result.bonusVideoCredits+" video credits.","good");document.getElementById("imageDelta").value="0";document.getElementById("videoDelta").value="0";await loadUsers()}catch(e){message("creditStatus",e.message,"bad")}finally{this.disabled=false}});
+  document.getElementById("resetPassword").addEventListener("click",async function(){var id=document.getElementById("passwordUser").value;var password=document.getElementById("newPassword").value;if(!id){message("passwordStatus","Choose a user first.","bad");return}if(password.length<10){message("passwordStatus","New password must be at least 10 characters.","bad");return}if(!window.confirm("Reset this user's password and sign out all their current sessions?"))return;this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/password","POST",{newPassword:password});message("passwordStatus",result.message,"good");document.getElementById("newPassword").value=""}catch(e){message("passwordStatus",e.message,"bad")}finally{this.disabled=false}});
+  document.getElementById("createCoupon").addEventListener("click",async function(){var code=document.getElementById("couponCode").value.trim().toUpperCase();var percent=Number(document.getElementById("discountPercent").value);var maxText=document.getElementById("maxRedemptions").value.trim();var expiryText=document.getElementById("couponExpiry").value;if(!code){message("couponStatus","Enter a coupon code.","bad");return}var payload={code:code,discountPercent:percent,maxRedemptions:maxText?Number(maxText):null,expiresAt:expiryText?new Date(expiryText).toISOString():null};this.disabled=true;try{var result=await api("/api/admin/coupons","POST",payload);message("couponStatus","Created "+result.code+" with "+result.discountPercent+"% off.","good");document.getElementById("couponCode").value="";await loadCoupons()}catch(e){message("couponStatus",e.message,"bad")}finally{this.disabled=false}});
+  document.getElementById("refreshCoupons").addEventListener("click",loadCoupons);
+  document.getElementById("logout").addEventListener("click",async function(){this.disabled=true;try{await api("/api/admin/logout","POST",{})}catch(_){}location.replace("/admin/login")});
+  (async function(){try{var me=await api("/api/admin/me");message("pageStatus","Signed in as "+me.email,"good");await Promise.all([loadUsers(),loadCoupons()])}catch(e){message("pageStatus",e.message,"bad")}})();
+})();
+</script>
+</body>
+</html>

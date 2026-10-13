@@ -21,6 +21,8 @@ public class Payment {
     private Plan plan;
     private boolean yearly;
     private int amountRupees;
+    @Column(length = 40)
+    private String couponCode;
     @Column(length = 254)
     private String email;
     @Column(length = 32)

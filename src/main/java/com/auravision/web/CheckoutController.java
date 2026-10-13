@@ -1,12 +1,15 @@
 package com.auravision.web;
 
 import com.auravision.model.Plan;
+import com.auravision.service.AdminCouponService;
 import com.auravision.service.BillingService;
+import com.auravision.service.CouponCheckoutService;
 import com.auravision.service.RazorpayGateway;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +24,11 @@ import java.util.List;
 public class CheckoutController {
     private final BillingService billing;
     private final RazorpayGateway razorpay;
+    private final CouponCheckoutService couponCheckout;
 
     public record PlanView(String id, String name, int monthly, int yearly, int imagesPerDay, int videosPerDay) {}
-    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly) {}
+    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly, @Size(max = 40) String couponCode) {}
+    public record CouponValidateRequest(@NotBlank @Size(max = 40) String code, @NotNull Plan plan, boolean yearly) {}
     public record VerifyRequest(@NotBlank String orderId, @NotBlank String razorpayPaymentId,
                                 @NotBlank String razorpaySubscriptionId, @NotBlank String razorpaySignature) {}
     public record CheckoutConfig(boolean ready, boolean databaseReady, boolean razorpayConfigured,
@@ -43,12 +48,18 @@ public class CheckoutController {
             razorpay.isConfigured(), "Razorpay", billing.paymentSetupMessage());
     }
 
+    @PostMapping("/coupons/validate")
+    public AdminCouponService.CouponQuote validateCoupon(@Valid @RequestBody CouponValidateRequest body) {
+        return couponCheckout.quote(body.code(), body.plan(), body.yearly());
+    }
+
     @PostMapping("/subscriptions")
     @ResponseStatus(HttpStatus.CREATED)
     public BillingService.CheckoutStart createSubscription(HttpServletRequest request,
                                                             @Valid @RequestBody SubscriptionRequest body) {
-        return billing.createSubscription(requireAccount(request), (String) request.getAttribute(OwnerFilter.ACCOUNT_EMAIL_ATTR),
-            body.plan(), body.yearly());
+        return couponCheckout.createSubscription(requireAccount(request),
+            (String) request.getAttribute(OwnerFilter.ACCOUNT_EMAIL_ATTR),
+            body.plan(), body.yearly(), body.couponCode());
     }
 
     @PostMapping("/verify")
@@ -76,9 +87,8 @@ public class CheckoutController {
 
     private static String requireAccount(HttpServletRequest request) {
         Object value = request.getAttribute(OwnerFilter.ACCOUNT_ATTR);
-        if (!(value instanceof String owner) || owner.isBlank()) {
+        if (!(value instanceof String owner) || owner.isBlank())
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sign in to manage a subscription.");
-        }
         return owner;
     }
     private static String title(String value) { return value.substring(0, 1) + value.substring(1).toLowerCase(); }

@@ -282,6 +282,8 @@
     try {
       var quote = await api("/api/checkout/coupons/validate", "POST", { code:code, plan:plan.id, yearly:yearly });
       couponCode = quote.code;
+      quote.planId = plan.id;
+      quote.yearly = yearly;
       couponQuote = quote;
       status.textContent = quote.code + " applied: " + quote.discountPercent + "% off " + money(quote.originalAmountRupees) + ". Discounted recurring amount: " + money(quote.discountedAmountRupees) + ". Razorpay will confirm the charge.";
       status.className = "status good";
@@ -353,7 +355,10 @@
     button.disabled = true;
     button.textContent = "Preparing secure checkout…";
     try {
-      var appliedCoupon = couponCode && couponQuote && couponQuote.code === couponCode ? couponCode : null;
+      if (couponCode && (!couponQuote || couponQuote.code !== couponCode || couponQuote.planId !== planId || couponQuote.yearly !== yearly)) {
+        throw new Error("Re-apply your coupon for the selected plan and billing period before checkout.");
+      }
+      var appliedCoupon = couponCode && couponQuote ? couponCode : null;
       var checkout = await api("/api/checkout/subscriptions", "POST", { plan:planId, yearly:yearly, couponCode:appliedCoupon });
       var options = {
         key:checkout.keyId,

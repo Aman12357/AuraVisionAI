@@ -566,6 +566,83 @@
       background: linear-gradient(160deg, #ffd36b, #ff5b8a)
     }
 
+    .photo-film {
+      width: 90%;
+      gap: 10px;
+      align-items: stretch
+    }
+
+    .film-photo {
+      position: relative;
+      display: block;
+      flex: 1;
+      min-width: 0;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 8px 22px rgba(0,0,0,.16)
+    }
+
+    .film-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .35s ease
+    }
+
+    .film-photo:hover img {
+      transform: scale(1.06)
+    }
+
+    .film-photo::after {
+      content: "";
+      position: absolute;
+      inset: 45% 0 0;
+      background: linear-gradient(transparent, rgba(0,0,0,.72));
+      pointer-events: none
+    }
+
+    .film-caption {
+      position: absolute;
+      z-index: 1;
+      left: 8px;
+      right: 8px;
+      bottom: 9px;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0,0,0,.45)
+    }
+
+    .film-kicker {
+      position: absolute;
+      z-index: 1;
+      top: 8px;
+      left: 8px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      background: rgba(0,0,0,.48);
+      color: #fff;
+      font-size: 9px;
+      letter-spacing: .06em;
+      font-weight: 700
+    }
+
+    .stage-photo-note {
+      position: absolute;
+      left: 15px;
+      right: 15px;
+      bottom: 12px;
+      text-align: center;
+      color: rgba(255,255,255,.82);
+      font-size: 11px;
+      pointer-events: none
+    }
+
     .chips {
       display: flex;
       flex-wrap: wrap;
@@ -1067,6 +1144,25 @@
     }
 
     @media(max-width:700px) {
+      .photo-film {
+        width: 94%;
+        gap: 6px
+      }
+
+      .film-caption {
+        left: 5px;
+        right: 5px;
+        bottom: 6px;
+        font-size: 9px
+      }
+
+      .film-kicker {
+        left: 5px;
+        top: 5px;
+        font-size: 8px;
+        padding: 3px 4px
+      }
+
       .pay-grid {
         grid-template-columns: 1fr
       }
@@ -1222,8 +1318,25 @@
             <h3>Extend the scene.</h3>
             <p>Ask Aura what happens next to lengthen your video while maintaining the story.</p>
           </div>
-          <div class="stage">
-            <div class="film" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="stage" aria-label="Photo sequence showing how a scene can continue">
+            <div class="film photo-film">
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Sunbeams shining through a dense green forest" loading="lazy" decoding="async">
+                <span class="film-kicker">SCENE 01</span><span class="film-caption">Enter the forest</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Quiet mountain lake reflecting the surrounding landscape" loading="lazy" decoding="async">
+                <span class="film-kicker">SCENE 02</span><span class="film-caption">Reveal the lake</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Wide view across a mountain valley and lake" loading="lazy" decoding="async">
+                <span class="film-kicker">SCENE 03</span><span class="film-caption">Widen the view</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Golden sunrise spreading across a natural landscape" loading="lazy" decoding="async">
+                <span class="film-kicker">SCENE 04</span><span class="film-caption">Continue at sunrise</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1249,11 +1362,25 @@
             <p>Don't wait for a spark. Jump into curated styles to see what's possible in a single tap.</p>
             <a class="btn ghost" href="https://gemini.google.com/veo">Browse the templates</a>
           </div>
-          <div class="stage">
-            <div class="film" aria-hidden="true" style="width:86%"><i
-                style="background:linear-gradient(160deg,#ff9a6b,#a54cff);opacity:1"></i><i
-                style="background:linear-gradient(160deg,#9be26b,#0f7a6a);opacity:1"></i><i
-                style="background:linear-gradient(160deg,#ff7be0,#4a2bb5);opacity:1"></i></div>
+          <div class="stage" aria-label="A collection of visual inspiration photos">
+            <div class="film photo-film">
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Golden desert landscape with long shadows" loading="lazy" decoding="async">
+                <span class="film-kicker">TRAVEL</span><span class="film-caption">Golden hour</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Blue ocean water and white sea foam" loading="lazy" decoding="async">
+                <span class="film-kicker">CINEMATIC</span><span class="film-caption">Ocean motion</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Rolling green hills under soft daylight" loading="lazy" decoding="async">
+                <span class="film-kicker">NATURE</span><span class="film-caption">Dream landscape</span>
+              </div>
+              <div class="film-photo">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&amp;fit=crop&amp;w=520&amp;q=82" alt="Tropical beach with turquoise water and pale sand" loading="lazy" decoding="async">
+                <span class="film-kicker">ESCAPE</span><span class="film-caption">Island getaway</span>
+              </div>
+            </div>
           </div>
         </div>
 

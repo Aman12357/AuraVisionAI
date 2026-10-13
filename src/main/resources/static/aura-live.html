@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
+  <script>
+    (function () {
+      try {
+        document.documentElement.setAttribute("data-theme", localStorage.getItem("aura_theme") === "light" ? "light" : "dark");
+      } catch (_) {}
+    })();
+  </script>
+  <title>Conversational Creation · AuraVision AI</title>
+  <meta name="description" content="AuraVision currently supports text-based creative direction. Describe the image you want, refine the wording, then generate it in Studio.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0b0d12; --surface:#151821; --surface2:#1d212c; --text:#f1f3f8;
+      --muted:#a3a9b8; --line:#2a2f3c; --blue:#85aaff; --accent:#b48cff;
+      --grad:linear-gradient(135deg,#6fa0ff 0%,#b48cff 52%,#ff8fb8 100%);
+      --shadow:0 16px 50px rgba(0,0,0,.22);
+    }
+    :root[data-theme="light"] {
+      color-scheme:light;
+      --bg:#f8f9fc; --surface:#fff; --surface2:#eef1f8; --text:#111827;
+      --muted:#5e6678; --line:#dbe0eb; --blue:#315fc2; --accent:#6d45bd;
+      --grad:linear-gradient(135deg,#4a7de0 0%,#8b5cf6 52%,#cf4d89 100%);
+      --shadow:0 16px 40px rgba(23,36,64,.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "DM Sans",Inter,system-ui,sans-serif}
+    a{color:inherit}
+    .wrap{width:min(1120px,calc(100% - 40px));margin-inline:auto}
+    header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+    .nav{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{font-weight:700;font-size:19px;text-decoration:none;letter-spacing:-.03em}
+    .brand span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .nav-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .nav-links a{text-decoration:none;color:var(--muted);font-size:14px}
+    .nav-links a:hover{color:var(--text)}
+    .theme-toggle{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer}
+    main{padding:64px 0 80px}
+    .hero{max-width:850px;margin:0 auto 42px}
+    .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+    h1{font-size:clamp(36px,6vw,66px);line-height:1.04;letter-spacing:-.055em;max-width:880px;margin:0 0 22px}
+    .lead{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:770px;margin:0 0 24px}
+    .status{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:7px 11px;border-radius:9px;color:var(--muted);font-size:13px}
+    .status-dot{width:7px;height:7px;background:#61c69b;border-radius:50%}
+    .status.planned .status-dot{background:#e6b86b}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;border:1px solid var(--line)}
+    .btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .btn.secondary{background:var(--surface);color:var(--text)}
+    .btn:hover{transform:translateY(-1px)}
+    .section-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:42px 0 18px}
+    .section-heading h2{font-size:22px;letter-spacing:-.03em;margin:0}
+    .section-heading p{color:var(--muted);font-size:13px;margin:0}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .feature-card{display:flex;flex-direction:column;align-items:flex-start;min-height:210px;position:relative;padding:22px;border:1px solid var(--line);border-radius:17px;background:var(--surface);text-decoration:none;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .feature-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow)}
+    .card-index{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+    .card-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:15px 0 8px}
+    .feature-card h2{font-size:20px;line-height:1.25;letter-spacing:-.03em;margin:0 24px 8px 0}
+    .feature-card p{font-size:14px;color:var(--muted);margin:0 0 22px}
+    .card-arrow{position:absolute;right:20px;top:18px;color:var(--muted);font-size:18px}
+    .note{margin-top:24px;padding:17px 19px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 12px 12px 0;color:var(--muted);font-size:14px}
+    .site-footer{border-top:1px solid var(--line);padding:24px 0 30px}
+    .footer-inner{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .footer-inner nav{display:flex;gap:14px;flex-wrap:wrap}
+    .footer-inner a{text-decoration:none}
+    .footer-inner a:hover{color:var(--text)}
+    @media(max-width:800px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nav{padding:12px 0;align-items:flex-start}.nav-links{gap:10px}.nav-links a{font-size:13px}main{padding-top:44px}}
+    @media(max-width:540px){.wrap{width:min(100% - 28px,1120px)}.feature-grid{grid-template-columns:1fr}.feature-card{min-height:unset}.nav{flex-wrap:wrap}.nav-links{order:3;width:100%}.theme-toggle{margin-left:auto}h1{font-size:42px}.section-heading{display:block}.section-heading p{margin-top:6px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="AuraVision AI home"><span>AuraVision AI</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="/">Home</a>
+      <a href="/aura-features.html">What Aura Can Do</a>
+      <a href="/studio.html">Studio</a>
+      <a href="/whats-new.html">What's New</a>
+      <a href="/account.html">My Account</a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme">☀</button>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">WRITE · REFINE · CREATE</div>
+      <h1>Start with a thought. Shape it into a visual.</h1>
+      <p class="lead">AuraVision currently supports text-based creative direction. Describe the image you want, refine the wording, then generate it in Studio.</p>
+      <span class="status "><span class="status-dot"></span>Text prompting available</span>
+      <div class="actions">
+        <a class="btn primary" href="/studio.html">Start a prompt ↗</a>
+        <a class="btn secondary" href="/image-generation.html">Image generation</a>
+      </div>
+    </section>
+    <div class="section-heading">
+      <h2>How this fits into Aura</h2>
+      <p>Links stay within the AuraVision website.</p>
+    </div>
+    <section class="feature-grid" aria-label="Related capabilities">
+      <a class="feature-card" href="/studio.html">
+    <span class="card-index">01</span>
+    <span class="card-label">Open Studio</span>
+    <h2>Describe the idea</h2>
+    <p>Explain the subject, setting, lighting, mood, composition, and details you want to preserve.</p>
+    <span class="card-arrow" aria-hidden="true">↗</span>
+  </a>
+<a class="feature-card" href="/studio.html">
+    <span class="card-index">02</span>
+    <span class="card-label">Prompt tools</span>
+    <h2>Refine the prompt</h2>
+    <p>Use the prompt-enhancement control in Studio to turn a rough idea into a more detailed image brief.</p>
+    <span class="card-arrow" aria-hidden="true">↗</span>
+  </a>
+<a class="feature-card" href="/aura-features.html">
+    <span class="card-index">03</span>
+    <span class="card-label">Not available yet</span>
+    <h2>Voice conversation</h2>
+    <p>Live voice conversation is not implemented in the current website. This page does not present it as an active feature.</p>
+    <span class="card-arrow" aria-hidden="true">↗</span>
+  </a>
+    </section>
+    <div class="note">Availability can depend on backend configuration, provider credentials, usage limits, and service status. This page does not send you to Gemini or claim unavailable functionality is live.</div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <span>© 2026 AuraVision AI</span>
+    <nav aria-label="Footer">
+      <a href="/aura-features.html">What Aura Can Do</a>
+      <a href="/whats-new.html">What's New</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="https://github.com/Aman12357/AuraVisionAI" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </div>
+</footer>
+<script>
+  function toggleTheme() {
+    var current = document.documentElement.getAttribute("data-theme") || "dark";
+    var next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("aura_theme", next); } catch (_) {}
+    updateThemeButton(next);
+  }
+  function updateThemeButton(theme) {
+    var btn = document.getElementById("themeToggle");
+    if (!btn) return;
+    btn.textContent = theme === "dark" ? "☀" : "☾";
+    btn.setAttribute("aria-label", "Switch to " + (theme === "dark" ? "light" : "dark") + " theme");
+    btn.title = "Switch to " + (theme === "dark" ? "light" : "dark") + " theme";
+  }
+  updateThemeButton(document.documentElement.getAttribute("data-theme") || "dark");
+</script>
+</body>
+</html>

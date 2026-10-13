@@ -21,6 +21,10 @@ public class AccountUser {
     private String passwordHash;
     @Column(name = "owner_token", nullable = false, length = 36)
     private String ownerToken;
+    @Column(nullable = false)
+    private int bonusImageCredits = 0;
+    @Column(nullable = false)
+    private int bonusVideoCredits = 0;
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
     @PrePersist void onCreate() { createdAt = Instant.now(); }

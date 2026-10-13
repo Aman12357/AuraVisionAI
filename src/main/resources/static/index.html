@@ -342,34 +342,102 @@
       display: flex;
       align-items: flex-end;
       padding: 18px;
-      border: 1px solid var(--line)
+      border: 1px solid var(--line);
+      text-decoration: none;
+      isolation: isolate;
+      cursor: pointer;
+      background: var(--surface);
+      transition: transform .2s ease, border-color .2s ease
+    }
+
+    .tile:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-bright)
+    }
+
+    .tile-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -2;
+      transition: transform .35s ease
+    }
+
+    .tile:hover .tile-image {
+      transform: scale(1.045)
+    }
+
+    .tile::before {
+      content: "";
+      position: absolute;
+      inset: 32% 0 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .74) 100%);
+      z-index: -1;
+      pointer-events: none
     }
 
     .tile::after {
-      content: "▶";
+      content: "↗";
       position: absolute;
       top: 16px;
       right: 16px;
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(0, 0, 0, .45);
+      background: rgba(0, 0, 0, .58);
+      border: 1px solid rgba(255, 255, 255, .3);
       color: #fff;
       display: grid;
       place-items: center;
-      font-size: 12px
+      font-size: 16px;
+      z-index: 1
     }
 
     .tile p {
       position: relative;
       z-index: 1;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
+      line-height: 1.35;
       color: #fff;
-      background: rgba(0, 0, 0, .4);
-      padding: 8px 12px;
+      background: rgba(0, 0, 0, .42);
+      padding: 9px 12px;
       border-radius: 12px;
-      backdrop-filter: blur(6px)
+      backdrop-filter: blur(6px);
+      margin: 0;
+      max-width: calc(100% - 4px)
+    }
+
+    .tile-credit {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 2;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 8px;
+      border-radius: 7px;
+      background: rgba(0, 0, 0, .52);
+      text-decoration: none
+    }
+
+    .tile-credit:hover {
+      background: rgba(0, 0, 0, .78)
+    }
+
+    .tile-link {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: inherit
+    }
+
+    .tile-link:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: -4px
     }
 
     .t1 {
@@ -1099,25 +1167,43 @@
     <section>
       <div class="wrap center">
         <h2>Create <span class="grad">anything.</span> From everything.</h2>
-        <p class="sub">Blend text, images, and video to bring your ideas to life in motion.</p>
+        <p class="sub">Choose a photo for inspiration. Open it to load a matching starting prompt in Studio.</p>
         <div class="tiles">
           <div class="tile t1">
-            <p>Neon city at dusk</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1641730259879-ad98e7db7bcb?auto=format&fit=crop&w=1200&q=85" alt="Bronze statue of a Hindu deity playing a flute, lit by warm sunlight" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/a-bronze-statue-of-a-man-playing-a-flute--jeARsrDO1c" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20cinematic%2C%20highly%20detailed%20bronze%20statue%20of%20Lord%20Krishna%20playing%20the%20flute%2C%20warm%20golden%20light%2C%20peaceful%20devotional%20atmosphere%2C%20realistic%20metal%20texture%2C%20soft%20depth%20of%20field" aria-label="Use Bronze flute statue as prompt inspiration"></a>
+            <p>Bronze flute statue</p>
           </div>
           <div class="tile t2">
-            <p>Surfing at sunrise</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1748944088887-dbcac01ac2eb?auto=format&fit=crop&w=1200&q=85" alt="Silhouette of a Hindu deity against a sunset sky" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/silhouette-of-hindu-deity-against-a-sunset-uLQw19QnC9s" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20cinematic%20silhouette%20of%20a%20Hindu%20deity%20against%20a%20dramatic%20sunset%2C%20glowing%20amber%20sky%2C%20deep%20green%20shadows%2C%20sacred%20peaceful%20mood%2C%20richly%20detailed%20and%20photorealistic" aria-label="Use Deity at sunset as prompt inspiration"></a>
+            <p>Deity at sunset</p>
           </div>
           <div class="tile t3">
-            <p>Claymation fox</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1491466424936-e304919aada7?auto=format&fit=crop&w=1200&q=85" alt="Green and teal northern lights shining over a snowy canyon at night" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/northern-lights-3l3RwQdHRHg" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20photorealistic%20Icelandic%20canyon%20at%20midnight%20beneath%20vivid%20emerald%20and%20teal%20northern%20lights%2C%20snow-covered%20cliffs%2C%20star-filled%20sky%2C%20cinematic%20wide-angle%20landscape" aria-label="Use Northern lights as prompt inspiration"></a>
+            <p>Northern lights</p>
           </div>
           <div class="tile t4">
-            <p>Astronaut in a garden</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1650019221780-f995b70aff2f?auto=format&fit=crop&w=1200&q=85" alt="Soft pink cherry blossoms clustered on a tree" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/a-close-up-of-pink-flowers-on-a-tree-ixdhiRf7Z0w" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20delicate%20close-up%20of%20pink%20cherry%20blossoms%20in%20soft%20spring%20sunlight%2C%20shallow%20depth%20of%20field%2C%20dreamy%20natural%20bokeh%2C%20crisp%20petals%2C%20photorealistic%20macro%20photography" aria-label="Use Cherry blossom season as prompt inspiration"></a>
+            <p>Cherry blossom season</p>
           </div>
           <div class="tile t5">
-            <p>Rainforest drone shot</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1759365858552-673804712af1?auto=format&fit=crop&w=1200&q=85" alt="Clear mountain lake reflecting rugged peaks and forest" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/calm-lake-reflects-sunlit-clouds-and-mountains-QjsvTStOBQI" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20photorealistic%20alpine%20lake%20reflecting%20sunlit%20mountain%20peaks%20and%20dark%20pine%20forests%2C%20crystal-clear%20water%2C%20natural%20color%2C%20early%20morning%20light%2C%20tranquil%20landscape%20photography" aria-label="Use Alpine lake as prompt inspiration"></a>
+            <p>Alpine lake</p>
           </div>
           <div class="tile t6">
-            <p>Retro music video</p>
+            <img class="tile-image" src="https://images.unsplash.com/photo-1758911995794-b83d3019e415?auto=format&fit=crop&w=1200&q=85" alt="Waves breaking along the shore under a dramatic orange sunset" loading="lazy" decoding="async">
+            <a class="tile-credit" href="https://unsplash.com/photos/waves-crash-on-the-shore-during-a-dramatic-sunset-QGRvFNe5FHM" target="_blank" rel="noopener noreferrer" aria-label="Open original photo on Unsplash">Unsplash photo</a>
+            <a class="tile-link" href="/studio.html?prompt=Create%20a%20cinematic%20photorealistic%20ocean%20at%20sunset%2C%20powerful%20waves%20breaking%20along%20the%20shoreline%2C%20glowing%20orange%20clouds%2C%20realistic%20foam%20and%20water%20texture%2C%20dramatic%20natural%20lighting" aria-label="Use Ocean sunset as prompt inspiration"></a>
+            <p>Ocean sunset</p>
           </div>
         </div>
       </div>

@@ -5,6 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aura Vision AI — Studio & Visual Generator</title>
+  <script>
+  (function () {
+    var savedTheme = "dark";
+    try {
+      savedTheme = localStorage.getItem("aura_theme") === "light" ? "light" : "dark";
+    } catch (_) {}
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  })();
+</script>
   <meta name="description"
     content="Aura Vision AI Studio — Create, generate, remix, and manage AI visuals powered by Google Gemini and Aura Diffusion.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -15,6 +24,7 @@
     rel="stylesheet">
   <style>
     :root {
+      color-scheme: dark;
       --bg: #0b0d12;
       --surface: #151821;
       --surface2: #1d212c;
@@ -45,6 +55,7 @@
     }
 
     :root[data-theme="light"] {
+      color-scheme: light;
       --bg: #f8f9fc;
       --surface: #ffffff;
       --surface2: #f0f2f7;
@@ -1481,7 +1492,7 @@
           <span class="credits-icon">⚡</span>
           <span id="creditsCount">25</span> Credits
         </div>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Switch theme" aria-pressed="false" title="Switch theme">
           🌓
         </button>
         <button class="user-profile-btn" onclick="window.location.href='/account.html'" title="Account & Plan">
@@ -2092,7 +2103,13 @@
     }
 
     function updateThemeBtnIcon(theme) {
-      document.getElementById('themeToggleBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+      const button = document.getElementById('themeToggleBtn');
+      if (!button) return;
+      const nextTheme = theme === 'dark' ? 'light' : 'dark';
+      button.textContent = theme === 'dark' ? '☀️' : '🌙';
+      button.setAttribute('aria-label', 'Switch to ' + nextTheme + ' theme');
+      button.setAttribute('title', 'Switch to ' + nextTheme + ' theme');
+      button.setAttribute('aria-pressed', String(theme === 'light'));
     }
 
     /* ==========================================================================

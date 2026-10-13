@@ -5,6 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AuraVision AI – Create & edit videos as easy as having a conversation</title>
+  <meta name="theme-color" content="#0b0d12">
+  <script>
+  (function () {
+    var savedTheme = "dark";
+    try {
+      savedTheme = localStorage.getItem("aura_theme") === "light" ? "light" : "dark";
+    } catch (_) {}
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  })();
+</script>
   <meta name="description"
     content="Make multimodal media from photos, reference styles, and clips. Use AI to edit videos, remix your gallery, or try out a template.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +23,7 @@
     rel="stylesheet">
   <style>
     :root {
+      color-scheme: dark;
       --bg: #0b0d12;
       --surface: #151821;
       --surface2: #1d212c;
@@ -28,6 +39,7 @@
 
     @media (prefers-color-scheme:light) {
       :root:not([data-theme="dark"]) {
+        color-scheme: light;
         --bg: #fbfbfe;
         --surface: #f0f2f8;
         --surface2: #e6e9f2;
@@ -40,6 +52,7 @@
     }
 
     :root[data-theme="light"] {
+      color-scheme: light;
       --bg: #fbfbfe;
       --surface: #f0f2f8;
       --surface2: #e6e9f2;
@@ -73,6 +86,13 @@
       text-decoration: none
     }
 
+    .theme-toggle-btn {
+      min-width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface); color: var(--text); font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap;
+    }
+    .theme-toggle-btn:hover { border-color: var(--blue); }
+    .theme-toggle-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
     :focus-visible {
       outline: 2px solid var(--blue);
       outline-offset: 3px;
@@ -1057,6 +1077,7 @@
           <li><a href="/account.html">Subscriptions</a></li>
           <li><a href="/whats-new.html">What's New</a></li>
         </ul>
+        <button class="theme-toggle-btn" id="siteThemeToggle" type="button" onclick="toggleSiteTheme()" aria-label="Switch to light theme" title="Switch to light theme">☀️</button>
         <a class="btn primary" href="/account.html">My Account</a>
         <a class="btn primary" href="/studio.html">Try AuraVision AI</a>
       </nav>
@@ -1321,4 +1342,25 @@
       e.target.classList.add('on');
     });
   </script>
+  <script>
+  function updateSiteThemeButton(theme) {
+    var button = document.getElementById("siteThemeToggle");
+    if (!button) return;
+    var nextTheme = theme === "dark" ? "light" : "dark";
+    button.textContent = theme === "dark" ? "☀️" : "🌙";
+    button.setAttribute("aria-label", "Switch to " + nextTheme + " theme");
+    button.setAttribute("title", "Switch to " + nextTheme + " theme");
+    button.setAttribute("aria-pressed", String(theme === "light"));
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#0b0d12" : "#f8f9fc");
+  }
+  function toggleSiteTheme() {
+    var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    var nextTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    try { localStorage.setItem("aura_theme", nextTheme); } catch (_) {}
+    updateSiteThemeButton(nextTheme);
+  }
+  updateSiteThemeButton(document.documentElement.getAttribute("data-theme") || "dark");
+</script>
 </body>

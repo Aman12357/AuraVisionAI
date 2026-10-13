@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101216">
+  <script>
+  (function () {
+    var savedTheme = "dark";
+    try {
+      savedTheme = localStorage.getItem("aura_theme") === "light" ? "light" : "dark";
+    } catch (_) {}
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  })();
+</script>
   <meta name="description" content="The latest product updates, improvements and release notes for AuraVision AI.">
   <title>What's New | AuraVision AI</title>
   <style>
@@ -18,6 +27,31 @@
       --accent: #a9c7ff;
       --good: #9bd9bf;
       --max: 1080px;
+      --header-bg: rgba(16,18,22,.94);
+      --brand-mark-text: #101216;
+      --subtle: #7e8795;
+      --tag-border: #395644;
+      --tag-setup: #e2c589;
+      --tag-setup-border: #625437;
+      --cta-border: #566782;
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f8f9fc;
+      --panel: #ffffff;
+      --panel-raised: #eef1f7;
+      --text: #101828;
+      --muted: #5e6678;
+      --line: #dbe0eb;
+      --accent: #315dbb;
+      --good: #087443;
+      --header-bg: rgba(248,249,252,.94);
+      --brand-mark-text: #ffffff;
+      --subtle: #687386;
+      --tag-border: #a8d5bc;
+      --tag-setup: #875a08;
+      --tag-setup-border: #dfc58d;
+      --cta-border: #b5c4dc;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -31,14 +65,16 @@
     a { color: inherit; text-decoration: none; }
     a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
     .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
-    .topbar { border-bottom: 1px solid var(--line); background: rgba(16,18,22,.94); }
+    .topbar { border-bottom: 1px solid var(--line); background: var(--header-bg); }
     .nav { min-height: 74px; display: flex; align-items: center; gap: 24px; }
     .brand { margin-right: auto; font-weight: 750; letter-spacing: -.04em; font-size: 21px; }
-    .brand-mark { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 9px; border-radius: 9px; background: var(--accent); color: #101216; font-size: 15px; }
+    .brand-mark { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 9px; border-radius: 9px; background: var(--accent); color: var(--brand-mark-text); font-size: 15px; }
     .nav-links { display: flex; align-items: center; gap: 22px; color: var(--muted); font-size: 14px; }
     .nav-links a:hover { color: var(--text); }
     .nav-links .current { color: var(--text); }
-    .nav-cta { padding: 9px 14px; border: 1px solid #566782; border-radius: 9px; color: var(--text); font-size: 14px; }
+    .nav-cta { padding: 9px 14px; border: 1px solid var(--cta-border); border-radius: 9px; color: var(--text); font-size: 14px; }
+    .theme-toggle-btn { display:inline-flex; align-items:center; justify-content:center; min-width:42px; height:40px; padding:7px 11px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--text); font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+    .theme-toggle-btn:hover { border-color:var(--accent); }
     .hero { padding: 86px 0 55px; border-bottom: 1px solid var(--line); }
     .eyebrow { display: flex; align-items: center; gap: 10px; margin: 0 0 20px; color: var(--accent); font-size: 12px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(155,217,191,.12); }
@@ -52,9 +88,9 @@
     .updates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .update { min-height: 250px; padding: 25px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); display: flex; flex-direction: column; }
     .update-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
-    .number { color: #7e8795; font-size: 12px; letter-spacing: .1em; font-weight: 750; }
-    .tag { border: 1px solid #395644; color: var(--good); padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-    .tag.setup { color: #e2c589; border-color: #625437; }
+    .number { color: var(--subtle); font-size: 12px; letter-spacing: .1em; font-weight: 750; }
+    .tag { border: 1px solid var(--tag-border); color: var(--good); padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .tag.setup { color: var(--tag-setup); border-color: var(--tag-setup-border); }
     .update h3 { margin: 22px 0 10px; font-size: 22px; line-height: 1.25; letter-spacing: -.03em; }
     .update p { margin: 0; color: var(--muted); font-size: 15px; }
     .update-footer { margin-top: auto; padding-top: 24px; color: #7e8795; font-size: 12px; }
@@ -71,6 +107,7 @@
       .nav { min-height: 64px; gap: 12px; flex-wrap: wrap; padding: 12px 0; }
       .brand { font-size: 19px; }
       .nav-links { order: 3; width: 100%; justify-content: space-between; gap: 12px; }
+      .theme-toggle-btn { margin-left:auto; }
       .hero { padding: 62px 0 42px; }
       .updates { grid-template-columns: 1fr; }
       .update { min-height: 220px; }
@@ -91,6 +128,7 @@
         <a href="/studio.html">Studio</a>
         <a class="current" href="/whats-new.html" aria-current="page">What's New</a>
       </nav>
+      <button class="theme-toggle-btn" id="siteThemeToggle" type="button" onclick="toggleSiteTheme()" aria-label="Switch to light theme" title="Switch to light theme">☀️</button>
       <a class="nav-cta" href="/account.html">My Account</a>
     </div>
   </header>
@@ -167,5 +205,26 @@
       </div>
     </div>
   </footer>
+<script>
+  function updateSiteThemeButton(theme) {
+    var button = document.getElementById("siteThemeToggle");
+    if (!button) return;
+    var nextTheme = theme === "dark" ? "light" : "dark";
+    button.textContent = theme === "dark" ? "☀️" : "🌙";
+    button.setAttribute("aria-label", "Switch to " + nextTheme + " theme");
+    button.setAttribute("title", "Switch to " + nextTheme + " theme");
+    button.setAttribute("aria-pressed", String(theme === "light"));
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#0b0d12" : "#f8f9fc");
+  }
+  function toggleSiteTheme() {
+    var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    var nextTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    try { localStorage.setItem("aura_theme", nextTheme); } catch (_) {}
+    updateSiteThemeButton(nextTheme);
+  }
+  updateSiteThemeButton(document.documentElement.getAttribute("data-theme") || "dark");
+</script>
 </body>
 </html>

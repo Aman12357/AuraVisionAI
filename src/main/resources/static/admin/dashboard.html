@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin Dashboard | AuraVision AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#151821;--line:#303747;--text:#f4f6fb;--muted:#a3adbf;--accent:#8bb4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px clamp(18px,4vw,56px);border-bottom:1px solid var(--line)}.brand{font-weight:750;font-size:20px}.sub{color:var(--muted);font-size:13px}
+button{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 14px;cursor:pointer;font:inherit}
+main{max-width:1200px;margin:0 auto;padding:36px 22px}h1{margin:0 0 6px;font-size:30px;letter-spacing:-.04em}.intro{color:var(--muted);margin:0 0 26px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px;margin:18px 0}.panel h2{font-size:18px;margin:0 0 14px}.status{color:var(--muted);margin:12px 0}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}td{font-size:14px}.pill{display:inline-block;padding:3px 8px;border-radius:6px;background:#253248;color:#c8dcff;font-size:12px}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.feature{padding:16px;border:1px solid var(--line);border-radius:10px}.feature strong{display:block;margin-bottom:4px}.feature span{color:var(--muted);font-size:13px}
+#error{color:#ffb4b4}
+</style></head><body>
+<header><div><div class="brand">AuraVision AI <span class="sub">/ Admin</span></div><div class="sub" id="adminEmail">Checking administrator session…</div></div><button id="logout">Sign out</button></header>
+<main><h1>Admin dashboard</h1><p class="intro">Private overview of registered accounts. Sensitive account credentials are never displayed.</p>
+<section class="panel"><h2>Registered users</h2><div class="status" id="status">Loading user list…</div><div class="tablewrap"><table><thead><tr><th>ID</th><th>Email</th><th>Created</th><th>Plan</th><th>Images left today</th><th>Videos left today</th></tr></thead><tbody id="users"></tbody></table></div></section>
+<section class="panel"><h2>Administration tools</h2><div class="features">
+<div class="feature"><strong>User account overview</strong><span>Available: view account email, join date, plan and remaining daily quota.</span></div>
+<div class="feature"><strong>Credit adjustments</strong><span>Not enabled yet. The current app uses plan-based daily limits, not a separate credit wallet.</span></div>
+<div class="feature"><strong>Discount coupons</strong><span>Not enabled yet. Recurring subscription prices must be changed and verified server-side.</span></div>
+<div class="feature"><strong>Password reset</strong><span>Not enabled yet. Passwords cannot be viewed; a secure reset flow must be implemented.</span></div>
+</div><p class="status" id="error" role="status"></p></section>
+</main>
+<script>
+const statusEl=document.getElementById('status'),tbody=document.getElementById('users'),emailEl=document.getElementById('adminEmail'),errorEl=document.getElementById('error');
+async function load(){try{
+const me=await fetch('/api/admin/me',{credentials:'same-origin'});if(!me.ok){location.replace('/admin/login');return}
+const identity=await me.json();emailEl.textContent=identity.email||'Administrator';
+const response=await fetch('/api/admin/users',{credentials:'same-origin'});if(!response.ok)throw new Error('Unable to load user accounts.');
+const list=await response.json();tbody.replaceChildren();
+for(const user of list){const tr=document.createElement('tr');const values=[user.id,user.email,user.createdAt?new Date(user.createdAt).toLocaleString():'—',user.plan,user.imagesLeftToday,user.videosLeftToday];for(const value of values){const td=document.createElement('td');td.textContent=String(value??'—');tr.appendChild(td)}tbody.appendChild(tr)}
+statusEl.textContent=list.length+' registered account(s).';if(!list.length)statusEl.textContent='No registered accounts found.';
+}catch(error){statusEl.textContent='Could not load the dashboard.';errorEl.textContent=error.message||''}}
+document.getElementById('logout').addEventListener('click',async()=>{await fetch('/api/admin/logout',{method:'POST',credentials:'same-origin'});location.replace('/admin/login')});
+load();
+</script></body></html>

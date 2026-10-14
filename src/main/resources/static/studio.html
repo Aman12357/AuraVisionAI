@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <style>
     :root {
@@ -34,24 +34,24 @@
       --line: #2a2f3c;
       --line-bright: #3d4457;
       --blue: #7aa7ff;
-      --purple: #b48cff;
-      --pink: #ff8fb8;
-      --accent: #8b5cf6;
-      --accent-hover: #7c3aed;
+      --purple: #60a5fa;
+      --pink: #38bdf8;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
       --danger: #ef4444;
       --danger-hover: #dc2626;
       --success: #10b981;
       --warning: #f59e0b;
-      --grad: linear-gradient(135deg, #6fa0ff 0%, #b48cff 50%, #ff8fb8 100%);
-      --grad-subtle: linear-gradient(135deg, rgba(111, 160, 255, 0.15) 0%, rgba(180, 140, 255, 0.15) 50%, rgba(255, 143, 184, 0.15) 100%);
-      --font: "Google Sans Flex", "DM Sans", "Inter", system-ui, -apple-system, sans-serif;
+      --grad: #2563eb;
+      --grad-subtle: #172337;
+      --font: "Inter", "DM Sans", system-ui, -apple-system, sans-serif;
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 18px;
       --radius-xl: 24px;
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
       --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-      --shadow-glow: 0 0 25px rgba(180, 140, 255, 0.25);
+      --shadow-glow: 0 0 25px rgba(96, 165, 250, 0.25);
     }
 
     :root[data-theme="light"] {
@@ -65,9 +65,9 @@
       --line: #dbe0eb;
       --line-bright: #cbd3e2;
       --blue: #3b82f6;
-      --purple: #8b5cf6;
+      --purple: #3b82f6;
       --pink: #ec4899;
-      --accent: #7c3aed;
+      --accent: #1d4ed8;
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
       --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.1);
       --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.15);
@@ -163,7 +163,7 @@
       place-items: center;
       color: #fff;
       font-size: 18px;
-      box-shadow: 0 2px 10px rgba(180, 140, 255, 0.4);
+      box-shadow: 0 2px 10px rgba(96, 165, 250, 0.4);
     }
 
     .brand-title {
@@ -180,9 +180,9 @@
       letter-spacing: 0.05em;
       padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(180, 140, 255, 0.15);
+      background: rgba(96, 165, 250, 0.15);
       color: var(--purple);
-      border: 1px solid rgba(180, 140, 255, 0.3);
+      border: 1px solid rgba(96, 165, 250, 0.3);
     }
 
     /* Navigation Tabs */
@@ -219,7 +219,7 @@
     .tab-btn.active {
       color: #fff;
       background: var(--grad);
-      box-shadow: 0 2px 10px rgba(111, 160, 255, 0.3);
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
     }
 
     .tab-badge {
@@ -474,7 +474,7 @@
 
     .prompt-input-container:focus-within {
       border-color: var(--purple);
-      box-shadow: 0 0 0 2px rgba(180, 140, 255, 0.2);
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
     }
 
     .prompt-textarea {
@@ -549,8 +549,8 @@
 
     .style-card.active {
       border-color: var(--purple);
-      background: rgba(180, 140, 255, 0.12);
-      box-shadow: 0 0 12px rgba(180, 140, 255, 0.2);
+      background: rgba(96, 165, 250, 0.12);
+      box-shadow: 0 0 12px rgba(96, 165, 250, 0.2);
     }
 
     .style-card-icon {
@@ -590,7 +590,7 @@
 
     .aspect-pill.active {
       border-color: var(--purple);
-      background: rgba(180, 140, 255, 0.12);
+      background: rgba(96, 165, 250, 0.12);
     }
 
     .aspect-icon-box {
@@ -700,7 +700,7 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 4px 20px rgba(180, 140, 255, 0.4);
+      box-shadow: 0 4px 20px rgba(96, 165, 250, 0.4);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       position: relative;
       overflow: hidden;
@@ -708,7 +708,7 @@
 
     .btn-generate:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 26px rgba(180, 140, 255, 0.55);
+      box-shadow: 0 6px 26px rgba(96, 165, 250, 0.55);
     }
 
     .btn-generate:active:not(:disabled) {
@@ -1030,7 +1030,7 @@
       height: 64px;
       border-radius: 20px;
       background: var(--grad-subtle);
-      border: 1px solid rgba(180, 140, 255, 0.3);
+      border: 1px solid rgba(96, 165, 250, 0.3);
       display: grid;
       place-items: center;
       font-size: 28px;
@@ -1709,7 +1709,7 @@
         <div class="metric-card">
           <div class="metric-top">
             <span class="metric-label">TOTAL GENERATIONS</span>
-            <div class="metric-icon-box" style="background: rgba(111, 160, 255, 0.15); color: var(--blue);">⚡</div>
+            <div class="metric-icon-box" style="background: rgba(37, 99, 235, 0.15); color: var(--blue);">⚡</div>
           </div>
           <div class="metric-value" id="dashTotalGen">0</div>
           <div class="metric-sub">Visuals generated with AI</div>
@@ -1718,7 +1718,7 @@
         <div class="metric-card">
           <div class="metric-top">
             <span class="metric-label">SAVED PHOTOS</span>
-            <div class="metric-icon-box" style="background: rgba(255, 143, 184, 0.15); color: var(--pink);">🖼️</div>
+            <div class="metric-icon-box" style="background: rgba(56, 189, 248, 0.15); color: var(--pink);">🖼️</div>
           </div>
           <div class="metric-value" id="dashSavedCount">0</div>
           <div class="metric-sub">Stored in your offline library</div>
@@ -2282,7 +2282,7 @@
       const height = Math.round((800 / wRatio) * hRatio);
 
       // Color palettes tailored by style
-      let c1 = '#4f46e5', c2 = '#7c3aed', c3 = '#ec4899', glow = '#60a5fa';
+      let c1 = '#4f46e5', c2 = '#1d4ed8', c3 = '#ec4899', glow = '#60a5fa';
       if (style === 'Cyberpunk') {
         c1 = '#050515'; c2 = '#ff007f'; c3 = '#00f0ff'; glow = '#ffe600';
       } else if (style === 'Anime') {

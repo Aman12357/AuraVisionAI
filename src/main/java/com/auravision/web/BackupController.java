@@ -72,7 +72,7 @@ public class BackupController {
 
         Path root = Path.of(storageDir).toAbsolutePath().normalize();
         List<Map<String, Object>> generationRows = new ArrayList<>();
-        List<String> mediaFiles = new ArrayList<>();
+        List<Map.Entry<String, String>> mediaFiles = new ArrayList<>();
         for (Generation g : generations.findAll()) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", g.getId());
@@ -89,19 +89,19 @@ public class BackupController {
             if (g.getFilePath() != null && g.getId() != null) {
                 try {
                     String ref = g.getFilePath();
-                    String candidate = mediaStorage.isR2(ref)
-                            ? ref.substring(ref.lastIndexOf('/') + 1)
+                    String candidate = mediaStorage.isDatabase(ref)
+                            ? g.getId() + extensionForMime(g.getMimeType())
                             : Path.of(ref).getFileName().toString();
                     if (MEDIA_NAME.matcher(candidate).matches() && candidate.startsWith(g.getId() + ".")
                             && mediaStorage.exists(ref)) {
-                        if (mediaStorage.isR2(ref)) {
+                        if (mediaStorage.isDatabase(ref)) {
                             mediaName = candidate;
-                            mediaFiles.add(ref);
+                            mediaFiles.add(Map.entry(ref, candidate));
                         } else {
                             Path file = Path.of(ref).toAbsolutePath().normalize();
                             if (file.startsWith(root) && Files.isRegularFile(file)) {
                                 mediaName = candidate;
-                                mediaFiles.add(ref);
+                                mediaFiles.add(Map.entry(ref, candidate));
                             }
                         }
                     }
@@ -166,10 +166,9 @@ public class BackupController {
                 zip.putNextEntry(new ZipEntry("manifest.json"));
                 zip.write(manifestBytes);
                 zip.closeEntry();
-                for (String mediaRef : mediaFiles) {
-                    String name = mediaStorage.isR2(mediaRef)
-                            ? mediaRef.substring(mediaRef.lastIndexOf('/') + 1)
-                            : Path.of(mediaRef).getFileName().toString();
+                for (Map.Entry<String, String> media : mediaFiles) {
+                    String mediaRef = media.getKey();
+                    String name = media.getValue();
                     if (!MEDIA_NAME.matcher(name).matches()) continue;
                     zip.putNextEntry(new ZipEntry("media/" + name));
                     try (InputStream input = mediaStorage.openStream(mediaRef)) {
@@ -187,6 +186,13 @@ public class BackupController {
                 .header(HttpHeaders.PRAGMA, "no-cache")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"auravision-backup.zip\"")
                 .body(body);
+    }
+
+    private static String extensionForMime(String mime) {
+        if ("video/mp4".equals(mime)) return ".mp4";
+        if ("image/jpeg".equals(mime)) return ".jpg";
+        if ("image/webp".equals(mime)) return ".webp";
+        return ".png";
     }
 
     private static String ownerReference(String ownerToken) {

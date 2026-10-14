@@ -26,6 +26,7 @@ public class BillingService {
     private final PaymentRepository payments;
     private final SubscriptionRepository subs;
     private final RazorpayPlanRepository razorpayPlans;
+    private final PlanPricingService pricing;
     private final RazorpayGateway razorpay;
     @Value("$" + "{spring.datasource.url:}") private String datasourceUrl;
 
@@ -87,7 +88,7 @@ public class BillingService {
         purchase.setOwnerToken(owner);
         purchase.setPlan(plan);
         purchase.setYearly(yearly);
-        purchase.setAmountRupees(plan.price(yearly));
+        purchase.setAmountRupees(pricing.price(plan, yearly));
         purchase.setEmail(email);
         purchase.setRazorpayPlanId(mapping.getRazorpayPlanId());
         purchase.setStatus(Payment.Status.CREATED);
@@ -110,12 +111,15 @@ public class BillingService {
     }
 
     private RazorpayPlanMapping getOrCreatePlan(Plan plan, boolean yearly) {
+        int currentPrice = pricing.price(plan, yearly);
         Optional<RazorpayPlanMapping> existing = razorpayPlans.findByPlanAndYearly(plan, yearly);
-        if (existing.isPresent()) return existing.get();
+        if (existing.isPresent() && existing.get().getAmountRupees() == currentPrice) return existing.get();
         RazorpayPlanMapping mapping = new RazorpayPlanMapping();
         mapping.setPlan(plan);
         mapping.setYearly(yearly);
-        mapping.setRazorpayPlanId(razorpay.createPlan(plan, yearly));
+        mapping.setRazorpayPlanId(razorpay.createPlan(plan, yearly, currentPrice));
+        mapping.setAmountRupees(currentPrice);
+        if (existing.isPresent()) mapping.setId(existing.get().getId());
         return razorpayPlans.saveAndFlush(mapping);
     }
 

@@ -4,6 +4,7 @@ import com.auravision.model.Plan;
 import com.auravision.service.AdminCouponService;
 import com.auravision.service.BillingService;
 import com.auravision.service.CouponCheckoutService;
+import com.auravision.service.PlanPricingService;
 import com.auravision.service.RazorpayGateway;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class CheckoutController {
     private final BillingService billing;
     private final RazorpayGateway razorpay;
     private final CouponCheckoutService couponCheckout;
+    private final PlanPricingService pricing;
 
     public record PlanView(String id, String name, int monthly, int yearly, int imagesPerDay, int videosPerDay) {}
     public record SubscriptionRequest(@NotNull Plan plan, boolean yearly, @Size(max = 40) String couponCode) {}
@@ -38,7 +40,7 @@ public class CheckoutController {
     @GetMapping("/plans")
     public List<PlanView> plans() {
         return Arrays.stream(Plan.values()).filter(p -> p != Plan.FREE)
-            .map(p -> new PlanView(p.name(), title(p.name()), p.price(false), p.price(true),
+            .map(p -> new PlanView(p.name(), title(p.name()), pricing.price(p, false), pricing.price(p, true),
                 p.imagesPerDay, p.videosPerDay)).toList();
     }
 

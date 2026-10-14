@@ -31,6 +31,12 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
   <h1>User management</h1><p class="intro">Manage bonus image/video credits, reset account passwords, and create or disable checkout coupon codes. Every change is checked by the server and stored in the database.</p>
   <p class="status" id="pageStatus" role="status" aria-live="polite">Checking admin session…</p>
   <div class="grid">
+    <section class="panel wide" id="subscriptionPricingPanel">
+      <h2>Subscription pricing</h2>
+      <p class="muted">Set your own monthly and yearly prices for each paid plan. Prices are in Indian rupees (INR). Changes affect new checkouts; existing subscribers keep the price of their current Razorpay subscription.</p>
+      <p class="status" id="pricingStatus" role="status" aria-live="polite">Loading subscription prices…</p>
+      <div id="pricingRows" style="display:grid;gap:12px"></div>
+    </section>
     <section class="panel">
       <h2>Adjust user credits</h2><p class="muted">Positive values add bonus credits; negative values remove credits. Changes affect generation quotas immediately.</p>
       <label for="creditUser">User account</label><select id="creditUser"><option value="">Loading users…</option></select>
@@ -104,13 +110,54 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
     var table=document.getElementById("couponTable"),cards=document.getElementById("couponCards");table.replaceChildren();cards.replaceChildren();
     try{coupons=await api("/api/admin/coupons");coupons.forEach(function(c){table.appendChild(couponRow(c));var card=document.createElement("article");card.className="card";var head=document.createElement("div");head.className="card-head";head.append(el("strong",c.code),el("span",c.active?"Active":"Disabled","pill"));card.appendChild(head);var meta=document.createElement("div");meta.className="card-meta";[["Discount",c.discountPercent+"%"],["Uses",(c.redeemedCount||0)+(c.maxRedemptions==null?" / unlimited":" / "+c.maxRedemptions)],["Expiry",date(c.expiresAt)]].forEach(function(p){var cell=document.createElement("div");cell.append(el("span",p[0],"meta-label"),el("span",p[1],"meta-value"));meta.appendChild(cell)});card.appendChild(meta);var button=el("button",c.active?"Disable coupon":"Enable coupon","btn");button.type="button";button.style.marginTop="12px";button.addEventListener("click",async function(){button.disabled=true;try{await api("/api/admin/coupons/"+c.id+"/active","POST",{active:!c.active});await loadCoupons()}catch(e){message("couponListStatus",e.message,"bad")}finally{button.disabled=false}});card.appendChild(button);cards.appendChild(card)});message("couponListStatus",coupons.length+" coupon(s) found.");if(!coupons.length)message("couponListStatus","No coupons yet. Create one above.")}catch(e){message("couponListStatus",e.message,"bad")}
   }
+  async function loadPricing(){
+    var container=document.getElementById("pricingRows");
+    container.replaceChildren();
+    message("pricingStatus","Loading subscription prices…");
+    try{
+      var plans=await api("/api/admin/pricing");
+      plans.forEach(function(plan){
+        var card=document.createElement("section");
+        card.style.cssText="display:grid;grid-template-columns:minmax(100px,1fr) repeat(2,minmax(120px,1fr)) auto;gap:12px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)";
+        var title=document.createElement("div");
+        title.append(el("strong",plan.name),el("div",plan.imagesPerDay+" images/day · "+plan.videosPerDay+" videos/day","note"));
+        card.appendChild(title);
+        function priceField(labelText,id,value){
+          var wrap=document.createElement("div");
+          var label=el("label",labelText);label.htmlFor=id;
+          var input=document.createElement("input");input.id=id;input.type="number";input.min="1";input.max="10000000";input.step="1";input.required=true;input.inputMode="numeric";input.value=String(value);
+          wrap.append(label,input);card.appendChild(wrap);return input;
+        }
+        var monthly=priceField("Monthly price (₹)","priceMonthly"+plan.plan,plan.monthlyRupees);
+        var yearly=priceField("Yearly price (₹)","priceYearly"+plan.plan,plan.yearlyRupees);
+        var save=el("button","Save prices","btn primary");save.type="button";card.appendChild(save);
+        save.addEventListener("click",async function(){
+          var m=Number(monthly.value),y=Number(yearly.value);
+          if(!Number.isSafeInteger(m)||!Number.isSafeInteger(y)||m<1||y<1||m>10000000||y>10000000){
+            message("pricingStatus","Enter valid whole-number prices from ₹1 to ₹1,00,00,000.","bad");return;
+          }
+          if(!window.confirm("Update "+plan.name+" subscription prices to ₹"+m+"/month and ₹"+y+"/year? New checkouts will use these prices."))return;
+          save.disabled=true;
+          try{
+            var saved=await api("/api/admin/pricing/"+encodeURIComponent(plan.plan),"PUT",{monthlyRupees:m,yearlyRupees:y});
+            monthly.value=String(saved.monthlyRupees);yearly.value=String(saved.yearlyRupees);
+            message("pricingStatus",saved.name+" prices saved: ₹"+saved.monthlyRupees+"/month and ₹"+saved.yearlyRupees+"/year.","good");
+          }catch(e){message("pricingStatus",e.message,"bad")}
+          finally{save.disabled=false}
+        });
+        container.appendChild(card);
+      });
+      if(!plans.length)message("pricingStatus","No paid plans were returned.","bad");
+      else message("pricingStatus","Prices loaded. Save a plan to apply changes to new checkouts.","good");
+    }catch(e){message("pricingStatus",e.message,"bad")}
+  }
   document.getElementById("userSearch").addEventListener("input",renderUsers);
   document.getElementById("saveCredits").addEventListener("click",async function(){var id=document.getElementById("creditUser").value;var imageDelta=Number(document.getElementById("imageDelta").value||0),videoDelta=Number(document.getElementById("videoDelta").value||0);if(!id){message("creditStatus","Choose a user first.","bad");return}if(!Number.isInteger(imageDelta)||!Number.isInteger(videoDelta)||imageDelta===0&&videoDelta===0){message("creditStatus","Enter a non-zero whole-number adjustment.","bad");return}this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/credits","POST",{imageDelta:imageDelta,videoDelta:videoDelta});message("creditStatus","Saved. Bonus balances: "+result.bonusImageCredits+" image and "+result.bonusVideoCredits+" video credits.","good");document.getElementById("imageDelta").value="0";document.getElementById("videoDelta").value="0";await loadUsers()}catch(e){message("creditStatus",e.message,"bad")}finally{this.disabled=false}});
   document.getElementById("resetPassword").addEventListener("click",async function(){var id=document.getElementById("passwordUser").value;var password=document.getElementById("newPassword").value;if(!id){message("passwordStatus","Choose a user first.","bad");return}if(password.length<10){message("passwordStatus","New password must be at least 10 characters.","bad");return}if(!window.confirm("Reset this user's password and sign out all their current sessions?"))return;this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/password","POST",{newPassword:password});message("passwordStatus",result.message,"good");document.getElementById("newPassword").value=""}catch(e){message("passwordStatus",e.message,"bad")}finally{this.disabled=false}});
   document.getElementById("createCoupon").addEventListener("click",async function(){var code=document.getElementById("couponCode").value.trim().toUpperCase();var percent=Number(document.getElementById("discountPercent").value);var maxText=document.getElementById("maxRedemptions").value.trim();var expiryText=document.getElementById("couponExpiry").value;if(!code){message("couponStatus","Enter a coupon code.","bad");return}var payload={code:code,discountPercent:percent,maxRedemptions:maxText?Number(maxText):null,expiresAt:expiryText?new Date(expiryText).toISOString():null};this.disabled=true;try{var result=await api("/api/admin/coupons","POST",payload);message("couponStatus","Created "+result.code+" with "+result.discountPercent+"% off.","good");document.getElementById("couponCode").value="";await loadCoupons()}catch(e){message("couponStatus",e.message,"bad")}finally{this.disabled=false}});
   document.getElementById("refreshCoupons").addEventListener("click",loadCoupons);
   document.getElementById("logout").addEventListener("click",async function(){this.disabled=true;try{await api("/api/admin/logout","POST",{})}catch(_){}location.replace("/admin/login")});
-  (async function(){try{var me=await api("/api/admin/me");message("pageStatus","Signed in as "+me.email,"good");await Promise.all([loadUsers(),loadCoupons()])}catch(e){message("pageStatus",e.message,"bad")}})();
+  (async function(){try{var me=await api("/api/admin/me");message("pageStatus","Signed in as "+me.email,"good");await Promise.all([loadUsers(),loadCoupons(),loadPricing()])}catch(e){message("pageStatus",e.message,"bad")}})();
 })();
 </script>
 </body>

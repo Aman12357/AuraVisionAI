@@ -19,6 +19,7 @@ public class GenerationWorker {
     private final GenerationRepository repo;
     private final GeminiClient gemini;
     private final CloudflareImageClient cloudflare;
+    private final GenerationCreditService creditService;
     @Value("${app.storage-dir}") private String storageDir;
 
     @Async
@@ -53,10 +54,17 @@ public class GenerationWorker {
         } catch (Exception e) {
             log.error("Generation {} failed", id, e);
             g.setStatus(Generation.Status.FAILED);
-            String m = String.valueOf(e.getMessage());
-            g.setError(m.length() > 900 ? m.substring(0, 900) : m);
+            // Provider error bodies can contain implementation details; keep them in server logs only.
+            g.setError("Generation failed. Your bonus credit will be returned if one was used. Please try again later.");
         }
         repo.save(g);
+        if (g.getStatus() == Generation.Status.FAILED) {
+            try {
+                creditService.refundFailedBonusCredit(id);
+            } catch (Exception refundError) {
+                log.error("Could not refund bonus credit for failed generation {}", id, refundError);
+            }
+        }
     }
 
     private static String extension(String mime) {

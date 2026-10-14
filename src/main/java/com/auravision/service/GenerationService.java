@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -41,6 +44,7 @@ public class GenerationService {
     private final AccountUserRepository users;
     @Value("${app.max-active-jobs}") private int maxActive;
 
+    @Transactional
     public Generation submit(String owner, Generation.Type type, String prompt, String ratio, String requestedModel) {
         String selectedModel = type == Generation.Type.IMAGE
                 ? (requestedModel == null || requestedModel.isBlank() ? CloudflareImageClient.MODEL_KEY : requestedModel.trim())
@@ -54,6 +58,7 @@ public class GenerationService {
         Plan plan = billing.planFor(owner);
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
         long used = usedToday(owner, type);
+        boolean bonusCreditUsed = false;
         if (used >= limit) {
             if (!consumeBonusCredit(owner, type)) {
                 if (limit == 0)
@@ -61,6 +66,7 @@ public class GenerationService {
                 throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                         "Daily limit reached (" + limit + " per day on the " + plan + " plan). It resets at midnight UTC.");
             }
+            bonusCreditUsed = true;
         }
 
         Generation g = new Generation();
@@ -69,8 +75,13 @@ public class GenerationService {
         g.setPrompt(prompt.trim());
         g.setAspectRatio(normalise(type, ratio));
         if (type == Generation.Type.IMAGE) g.setModel(selectedModel);
+        g.setBonusCreditUsed(bonusCreditUsed);
         g = repo.save(g);
-        worker.process(g.getId());
+        Long generationId = g.getId();
+        // Do not let the async worker race the transaction commit and miss the new row.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void afterCommit() { worker.process(generationId); }
+        });
         return g;
     }
 

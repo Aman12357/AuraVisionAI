@@ -1,20 +1,12 @@
 package com.auravision.service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import com.auravision.model.GenerationMedia;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.AbstractResource;
-import org.springframework.core.io.Resource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -22,129 +14,92 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Optional durable object storage. If all R2 settings are absent, local storage
- * remains available for development; Render's local filesystem is not durable.
+ * Stores new generated media in PostgreSQL for persistence without an extra
+ * object-storage account. Existing local paths remain readable for compatibility.
+ * Database storage is best for an MVP / low-volume use because videos consume DB quota.
  */
 @Service
 @Slf4j
 public class MediaStorageService {
-    private static final String R2_PREFIX = "r2://";
+    private static final String DB_PREFIX = "db://";
 
+    private final JdbcTemplate jdbc;
     @Value("${app.storage-dir:./storage}") private String storageDir;
-    @Value("${cloudflare.r2.account-id:}") private String accountId;
-    @Value("${cloudflare.r2.access-key-id:}") private String accessKeyId;
-    @Value("${cloudflare.r2.secret-access-key:}") private String secretAccessKey;
-    @Value("${cloudflare.r2.bucket:}") private String bucket;
 
-    private S3Client s3;
-
-    @PostConstruct
-    void initialize() {
-        boolean any = present(accountId) || present(accessKeyId) || present(secretAccessKey) || present(bucket);
-        boolean all = present(accountId) && present(accessKeyId) && present(secretAccessKey) && present(bucket);
-        if (any && !all) {
-            throw new IllegalStateException("Cloudflare R2 is partially configured. Set account ID, access key, secret key, and bucket together.");
-        }
-        if (all) {
-            s3 = S3Client.builder()
-                    .endpointOverride(java.net.URI.create("https://" + accountId.trim() + ".r2.cloudflarestorage.com"))
-                    .region(Region.US_EAST_1)
-                    .credentialsProvider(StaticCredentialsProvider.create(
-                            AwsBasicCredentials.create(accessKeyId.trim(), secretAccessKey.trim())))
-                    .build();
-            log.info("Durable media storage enabled (Cloudflare R2).");
-        } else {
-            log.warn("Cloudflare R2 is not configured; generated media will use local storage, which may be lost on host restart.");
-        }
+    public MediaStorageService(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
     public String store(Long generationId, String filename, byte[] bytes, String contentType) throws IOException {
         Objects.requireNonNull(bytes, "media bytes");
-        if (s3 != null) {
-            String key = "media/" + generationId + "/" + safeFilename(filename);
-            s3.putObject(PutObjectRequest.builder().bucket(bucket.trim()).key(key)
-                    .contentType(contentType == null ? "application/octet-stream" : contentType)
-                    .build(), RequestBody.fromBytes(bytes));
-            return R2_PREFIX + key;
+        if (generationId == null || generationId < 1) throw new IOException("Invalid generation ID");
+        // Guard against unexpectedly large uploads exhausting the free database quota.
+        if (bytes.length > 40 * 1024 * 1024) throw new IOException("Generated media exceeds the 40 MB database storage limit.");
+        try {
+            jdbc.update("DELETE FROM generation_media WHERE generation_id = ?", generationId);
+            jdbc.update("INSERT INTO generation_media (generation_id, media_data, content_type) VALUES (?, ?, ?)",
+                    generationId, bytes, contentType == null ? "application/octet-stream" : contentType);
+            return DB_PREFIX + generationId;
+        } catch (RuntimeException e) {
+            log.error("Could not store generation {} in the database", generationId, e);
+            throw new IOException("Could not save generated media to database storage.", e);
         }
-        Path root = Path.of(storageDir).toAbsolutePath().normalize();
-        Files.createDirectories(root);
-        Path file = root.resolve(safeFilename(filename)).normalize();
-        if (!file.getParent().equals(root)) throw new IOException("Invalid media filename");
-        Files.write(file, bytes);
-        return file.toString();
     }
 
     public boolean exists(String storageRef) {
         if (storageRef == null || storageRef.isBlank()) return false;
-        try {
-            if (isR2(storageRef)) {
-                if (s3 == null) return false;
-                s3.headObject(HeadObjectRequest.builder().bucket(bucket.trim()).key(objectKey(storageRef)).build());
-                return true;
+        if (isDatabase(storageRef)) {
+            try {
+                Long id = databaseId(storageRef);
+                Integer count = jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM generation_media WHERE generation_id = ?", Integer.class, id);
+                return count != null && count > 0;
+            } catch (RuntimeException e) {
+                return false;
             }
-            return Files.isRegularFile(Path.of(storageRef));
-        } catch (NoSuchKeyException e) {
-            return false;
-        } catch (S3Exception e) {
-            if (e.statusCode() == 404) return false;
-            throw e;
-        } catch (RuntimeException e) {
-            return false;
         }
+        try { return Files.isRegularFile(Path.of(storageRef)); }
+        catch (RuntimeException e) { return false; }
     }
 
     public long size(String storageRef) throws IOException {
-        if (isR2(storageRef)) {
-            HeadObjectResponse response = s3.headObject(HeadObjectRequest.builder()
-                    .bucket(bucket.trim()).key(objectKey(storageRef)).build());
-            return response.contentLength();
-        }
+        if (isDatabase(storageRef)) return load(storageRef).getMediaData().length;
         return Files.size(Path.of(storageRef));
     }
 
     public InputStream openStream(String storageRef) throws IOException {
-        if (isR2(storageRef)) {
-            if (s3 == null) throw new IOException("R2 storage is not configured");
-            ResponseInputStream<GetObjectResponse> stream = s3.getObject(GetObjectRequest.builder()
-                    .bucket(bucket.trim()).key(objectKey(storageRef)).build());
-            return stream;
-        }
+        if (isDatabase(storageRef)) return new ByteArrayInputStream(load(storageRef).getMediaData());
         return Files.newInputStream(Path.of(storageRef));
     }
 
     public void delete(String storageRef) throws IOException {
         if (storageRef == null || storageRef.isBlank()) return;
-        if (isR2(storageRef)) {
-            if (s3 != null) s3.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucket.trim()).key(objectKey(storageRef)).build());
+        if (isDatabase(storageRef)) {
+            jdbc.update("DELETE FROM generation_media WHERE generation_id = ?", databaseId(storageRef));
             return;
         }
         Files.deleteIfExists(Path.of(storageRef));
     }
 
-    public boolean isR2(String storageRef) {
-        return storageRef != null && storageRef.startsWith(R2_PREFIX);
+    public boolean isDatabase(String storageRef) {
+        return storageRef != null && storageRef.startsWith(DB_PREFIX);
     }
 
-    private String objectKey(String storageRef) {
-        String key = storageRef.substring(R2_PREFIX.length());
-        if (key.isBlank() || key.startsWith("/") || key.contains("..") || key.contains("\\")) {
-            throw new IllegalArgumentException("Invalid object storage reference");
+    private GenerationMedia load(String storageRef) throws IOException {
+        try {
+            return jdbc.queryForObject(
+                    "SELECT generation_id, media_data, content_type FROM generation_media WHERE generation_id = ?",
+                    (rs, row) -> new GenerationMedia(
+                            rs.getLong("generation_id"), rs.getBytes("media_data"), rs.getString("content_type")),
+                    databaseId(storageRef));
+        } catch (RuntimeException e) {
+            throw new IOException("Stored media was not found in the database.", e);
         }
-        return key;
     }
 
-    private static String safeFilename(String filename) {
-        String name = Path.of(filename).getFileName().toString();
-        if (!name.matches("[0-9]+\\.(png|jpg|webp|mp4)")) {
-            throw new IllegalArgumentException("Invalid generated media filename");
-        }
-        return name;
+    private Long databaseId(String storageRef) {
+        String value = storageRef.substring(DB_PREFIX.length());
+        if (!value.matches("[1-9][0-9]{0,17}")) throw new IllegalArgumentException("Invalid database media reference");
+        return Long.parseLong(value);
     }
-
-    private static boolean present(String value) { return value != null && !value.isBlank(); }
-
-    @PreDestroy
-    void close() { if (s3 != null) s3.close(); }
 }

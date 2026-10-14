@@ -62,11 +62,11 @@ public class GenerationController {
         if (g.getStatus() != Generation.Status.DONE || g.getFilePath() == null || !mediaStorage.exists(g.getFilePath()))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not available");
         String ext = g.getFilePath().substring(g.getFilePath().lastIndexOf('.'));
-        ResponseEntity.BodyBuilder b = ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(g.getMimeType() == null ? "application/octet-stream" : g.getMimeType()))
-                .contentLength(mediaStorage.size(g.getFilePath()));
-        if (download) b.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"auravision-" + id + ext + "\"");
         try {
+            ResponseEntity.BodyBuilder b = ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(g.getMimeType() == null ? "application/octet-stream" : g.getMimeType()))
+                    .contentLength(mediaStorage.size(g.getFilePath()));
+            if (download) b.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"auravision-" + id + ext + "\"");
             return b.body(new InputStreamResource(mediaStorage.openStream(g.getFilePath())));
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not available");

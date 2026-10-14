@@ -1,11 +1,14 @@
 package com.auravision.web;
 
 import com.auravision.model.AccountUser;
+import com.auravision.model.Plan;
+import com.auravision.model.PlanPricing;
 import com.auravision.repo.AccountSessionRepository;
 import com.auravision.repo.AccountUserRepository;
 import com.auravision.service.AdminCouponService;
 import com.auravision.service.GenerationService;
 import com.auravision.service.PasswordHasher;
+import com.auravision.service.PlanPricingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -36,6 +39,7 @@ public class AdminController {
     private final GenerationService generations;
     private final PasswordHasher passwordHasher;
     private final AdminCouponService coupons;
+    private final PlanPricingService pricing;
 
     @Value("${AURA_ADMIN_EMAIL:}") private String adminEmail;
     @Value("${AURA_ADMIN_PASSWORD:}") private String adminPassword;
@@ -50,6 +54,9 @@ public class AdminController {
     public record CouponCreate(@NotBlank @Size(min = 3, max = 40) String code,
                                int discountPercent, Integer maxRedemptions, Instant expiresAt) {}
     public record CouponActive(boolean active) {}
+    public record PricingUpdate(int monthlyRupees, int yearlyRupees) {}
+    public record PricingView(String plan, String name, int monthlyRupees, int yearlyRupees,
+                              int imagesPerDay, int videosPerDay) {}
 
     @GetMapping("/admin/login")
     public ResponseEntity<Void> loginPage() {
@@ -127,6 +134,31 @@ public class AdminController {
         users.save(user);
         sessions.deleteByUser_Id(user.getId());
         return Map.of("success", true, "message", "Password updated. Existing user sessions have been signed out.");
+    }
+
+    @GetMapping("/api/admin/pricing")
+    public List<PricingView> listPricing(HttpServletRequest request) {
+        requireAdmin(request);
+        return pricing.listPaid().stream().map(this::pricingView).toList();
+    }
+
+    @PutMapping("/api/admin/pricing/{plan}")
+    public PricingView updatePricing(HttpServletRequest request, @PathVariable String plan,
+                                     @Valid @RequestBody PricingUpdate body) {
+        requireAdmin(request);
+        final Plan selected;
+        try { selected = Plan.valueOf(plan.trim().toUpperCase(Locale.ROOT)); }
+        catch (RuntimeException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan.");
+        }
+        PlanPricing saved = pricing.update(selected, body.monthlyRupees(), body.yearlyRupees());
+        return pricingView(saved);
+    }
+
+    private PricingView pricingView(PlanPricing row) {
+        Plan plan = row.getPlan();
+        return new PricingView(plan.name(), plan.name().substring(0, 1) + plan.name().substring(1).toLowerCase(Locale.ROOT),
+            row.getMonthlyRupees(), row.getYearlyRupees(), plan.imagesPerDay, plan.videosPerDay);
     }
 
     @GetMapping("/api/admin/coupons")

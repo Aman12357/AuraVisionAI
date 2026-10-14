@@ -89,7 +89,9 @@ public class BackupController {
             if (g.getFilePath() != null && g.getId() != null) {
                 try {
                     String ref = g.getFilePath();
-                    String candidate = ref.substring(ref.lastIndexOf('/') + 1);
+                    String candidate = mediaStorage.isR2(ref)
+                            ? ref.substring(ref.lastIndexOf('/') + 1)
+                            : Path.of(ref).getFileName().toString();
                     if (MEDIA_NAME.matcher(candidate).matches() && candidate.startsWith(g.getId() + ".")
                             && mediaStorage.exists(ref)) {
                         if (mediaStorage.isR2(ref)) {
@@ -165,7 +167,9 @@ public class BackupController {
                 zip.write(manifestBytes);
                 zip.closeEntry();
                 for (String mediaRef : mediaFiles) {
-                    String name = mediaRef.substring(mediaRef.lastIndexOf('/') + 1);
+                    String name = mediaStorage.isR2(mediaRef)
+                            ? mediaRef.substring(mediaRef.lastIndexOf('/') + 1)
+                            : Path.of(mediaRef).getFileName().toString();
                     if (!MEDIA_NAME.matcher(name).matches()) continue;
                     zip.putNextEntry(new ZipEntry("media/" + name));
                     try (InputStream input = mediaStorage.openStream(mediaRef)) {

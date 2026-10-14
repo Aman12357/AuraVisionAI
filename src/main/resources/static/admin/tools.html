@@ -16,11 +16,11 @@ h1{font-size:clamp(27px,4vw,36px);line-height:1.15;letter-spacing:-.04em;margin:
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}.panel{min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:clamp(15px,2.5vw,22px)}.panel.wide{grid-column:1/-1}
 label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#0c0f16;color:var(--text)}
-.formrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.form-actions button{min-height:44px}
+.formrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pricing-row{display:grid;grid-template-columns:minmax(100px,1fr) repeat(2,minmax(120px,1fr)) auto;gap:12px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.form-actions button{min-height:44px}
 .status{margin-top:12px;color:var(--muted);font-size:13px;overflow-wrap:anywhere;white-space:pre-wrap}.status.good{color:var(--good)}.status.bad{color:var(--bad)}
 .note{font-size:12px;color:var(--muted);margin-top:8px}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}table{width:100%;min-width:720px;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:11px;border-bottom:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}th{background:var(--panel2);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}tr:last-child td{border-bottom:0}
 .cards{display:none;gap:10px;margin-top:12px}.card{min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card strong{overflow-wrap:anywhere}.pill{display:inline-flex;padding:3px 7px;border-radius:6px;border:1px solid #34435b;color:#c8dcff;background:#253248;font-size:12px}.card-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.meta-label{display:block;font-size:11px;color:var(--muted)}.meta-value{display:block;font-size:13px;overflow-wrap:anywhere}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.panel.wide{grid-column:auto}.desktop-table{display:none}.cards{display:grid}.nav{min-height:60px}.brand span{display:block}.formrow{grid-template-columns:1fr}}
+@media(max-width:760px){.pricing-row{grid-template-columns:repeat(2,minmax(0,1fr))}.pricing-row>div:first-child{grid-column:1/-1}.pricing-row>button{grid-column:1/-1}.grid{grid-template-columns:1fr}.panel.wide{grid-column:auto}.desktop-table{display:none}.cards{display:grid}.nav{min-height:60px}.brand span{display:block}.formrow{grid-template-columns:1fr}}
 @media(max-width:400px){.nav{width:calc(100% - 22px)}main{width:calc(100% - 22px)}.nav .actions{gap:5px}.btn{padding:8px 9px;font-size:13px}.brand{font-size:16px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
@@ -118,7 +118,7 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
       var plans=await api("/api/admin/pricing");
       plans.forEach(function(plan){
         var card=document.createElement("section");
-        card.style.cssText="display:grid;grid-template-columns:minmax(100px,1fr) repeat(2,minmax(120px,1fr)) auto;gap:12px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)";
+        card.className="pricing-row";
         var title=document.createElement("div");
         title.append(el("strong",plan.name),el("div",plan.imagesPerDay+" images/day · "+plan.videosPerDay+" videos/day","note"));
         card.appendChild(title);

@@ -22,12 +22,13 @@ public class CouponCheckoutService {
     private final PaymentRepository payments;
     private final RazorpayPlanRepository razorpayPlans;
     private final RazorpayGateway razorpay;
+    private final PlanPricingService pricing;
 
     @Transactional(readOnly = true)
     public AdminCouponService.CouponQuote quote(String rawCode, Plan plan, boolean yearly) {
         if (plan == null || plan == Plan.FREE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a paid plan before applying a coupon.");
-        return coupons.quote(rawCode, plan.price(yearly));
+        return coupons.quote(rawCode, pricing.price(plan, yearly));
     }
 
     @Transactional
@@ -41,7 +42,7 @@ public class CouponCheckoutService {
         if (billing.planFor(owner) != Plan.FREE)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have a paid plan. Manage it from My Account before starting another subscription.");
 
-        AdminCouponService.CouponQuote quote = coupons.quote(rawCode, plan.price(yearly));
+        AdminCouponService.CouponQuote quote = coupons.quote(rawCode, pricing.price(plan, yearly));
         Payment purchase = new Payment();
         purchase.setOrderId("AV" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
         purchase.setOwnerToken(owner);

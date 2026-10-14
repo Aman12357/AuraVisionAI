@@ -61,7 +61,8 @@ public class GenerationController {
         Generation g = service.get(owner, id);
         if (g.getStatus() != Generation.Status.DONE || g.getFilePath() == null || !mediaStorage.exists(g.getFilePath()))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not available");
-        String ext = g.getFilePath().substring(g.getFilePath().lastIndexOf('.'));
+        String ext = mediaStorage.isDatabase(g.getFilePath()) ? extensionForMime(g.getMimeType())
+                : g.getFilePath().substring(g.getFilePath().lastIndexOf('.'));
         try {
             ResponseEntity.BodyBuilder b = ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(g.getMimeType() == null ? "application/octet-stream" : g.getMimeType()))
@@ -71,6 +72,13 @@ public class GenerationController {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not available");
         }
+    }
+
+    private static String extensionForMime(String mime) {
+        if ("video/mp4".equals(mime)) return ".mp4";
+        if ("image/jpeg".equals(mime)) return ".jpg";
+        if ("image/webp".equals(mime)) return ".webp";
+        return ".png";
     }
 
     @DeleteMapping("/{id}")

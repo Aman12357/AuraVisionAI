@@ -19,6 +19,8 @@ public class RazorpayPlanMapping {
     private boolean yearly;
     @Column(nullable = false, unique = true, length = 40)
     private String razorpayPlanId;
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int amountRupees;
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
     @PrePersist void onCreate() { createdAt = Instant.now(); }

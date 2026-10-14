@@ -14,9 +14,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -42,6 +39,7 @@ public class GenerationService {
     private final GenerationWorker worker;
     private final BillingService billing;
     private final AccountUserRepository users;
+    private final MediaStorageService mediaStorage;
     @Value("${app.max-active-jobs}") private int maxActive;
 
     @Transactional
@@ -122,7 +120,8 @@ public class GenerationService {
     public void delete(String owner, Long id) {
         Generation g = get(owner, id);
         if (g.getFilePath() != null) {
-            try { Files.deleteIfExists(Path.of(g.getFilePath())); } catch (IOException ignored) {}
+            try { mediaStorage.delete(g.getFilePath()); }
+            catch (Exception ignored) { /* Keep delete available if object storage is temporarily unavailable. */ }
         }
         repo.delete(g);
     }

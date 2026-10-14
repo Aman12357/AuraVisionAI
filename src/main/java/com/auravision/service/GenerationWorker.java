@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 /** Runs generations in the background so HTTP requests return immediately. */
 @Component
@@ -20,6 +18,7 @@ public class GenerationWorker {
     private final GeminiClient gemini;
     private final CloudflareImageClient cloudflare;
     private final GenerationCreditService creditService;
+    private final MediaStorageService mediaStorage;
     @Value("${app.storage-dir}") private String storageDir;
 
     @Async
@@ -43,11 +42,8 @@ public class GenerationWorker {
                 repo.save(g);
                 media = gemini.awaitVideo(g.getOperationName());
             }
-            Path dir = Path.of(storageDir);
-            Files.createDirectories(dir);
-            Path file = dir.resolve(id + "." + extension(media.mime()));
-            Files.write(file, media.data());
-            g.setFilePath(file.toString());
+            String filename = id + "." + extension(media.mime());
+            g.setFilePath(mediaStorage.store(id, filename, media.data(), media.mime()));
             g.setMimeType(media.mime());
             g.setStatus(Generation.Status.DONE);
             g.setError(null);

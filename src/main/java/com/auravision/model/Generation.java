@@ -39,6 +39,12 @@ public class Generation {
     @Column(length = 1000)
     private String error;
 
+    /** True when this generation consumed a one-off bonus credit. */
+    private Boolean bonusCreditUsed = false;
+
+    /** Idempotency guard so a failed job cannot refund the same credit twice. */
+    private Boolean bonusCreditRefunded = false;
+
     private Instant createdAt;
     private Instant updatedAt;
 

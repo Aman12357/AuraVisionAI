@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - name: Ping AuraVision AI backend
+      - name: Check AuraVision AI backend and database
         shell: bash
         run: |
           set -euo pipefail
@@ -31,5 +31,5 @@ jobs:
             --retry-all-errors \
             --output /tmp/auravision-health-response.txt \
             --write-out "HTTP status: %{http_code}\n" \
-            https://auravisionai-docker.onrender.com/
+            https://auravisionai-docker.onrender.com/api/health
           cat /tmp/auravision-health-response.txt

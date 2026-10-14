@@ -10,6 +10,7 @@ import com.auravision.repo.GenerationRepository;
 import com.auravision.repo.PaymentRepository;
 import com.auravision.repo.RazorpayPlanRepository;
 import com.auravision.repo.SubscriptionRepository;
+import com.auravision.service.MediaStorageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,6 +52,7 @@ public class BackupController {
     private final SubscriptionRepository subscriptions;
     private final RazorpayPlanRepository razorpayPlans;
     private final ObjectMapper objectMapper;
+    private final MediaStorageService mediaStorage;
 
     @Value("$" + "{BACKUP_API_TOKEN:}") private String backupToken;
     @Value("$" + "{app.storage-dir:./storage}") private String storageDir;
@@ -69,7 +72,7 @@ public class BackupController {
 
         Path root = Path.of(storageDir).toAbsolutePath().normalize();
         List<Map<String, Object>> generationRows = new ArrayList<>();
-        List<Path> mediaFiles = new ArrayList<>();
+        List<String> mediaFiles = new ArrayList<>();
         for (Generation g : generations.findAll()) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", g.getId());
@@ -85,12 +88,22 @@ public class BackupController {
             String mediaName = null;
             if (g.getFilePath() != null && g.getId() != null) {
                 try {
-                    Path file = Path.of(g.getFilePath()).toAbsolutePath().normalize();
-                    String candidate = file.getFileName() == null ? "" : file.getFileName().toString();
-                    if (file.startsWith(root) && MEDIA_NAME.matcher(candidate).matches()
-                            && candidate.startsWith(g.getId() + ".") && Files.isRegularFile(file)) {
-                        mediaName = candidate;
-                        mediaFiles.add(file);
+                    String ref = g.getFilePath();
+                    String candidate = mediaStorage.isR2(ref)
+                            ? ref.substring(ref.lastIndexOf('/') + 1)
+                            : Path.of(ref).getFileName().toString();
+                    if (MEDIA_NAME.matcher(candidate).matches() && candidate.startsWith(g.getId() + ".")
+                            && mediaStorage.exists(ref)) {
+                        if (mediaStorage.isR2(ref)) {
+                            mediaName = candidate;
+                            mediaFiles.add(ref);
+                        } else {
+                            Path file = Path.of(ref).toAbsolutePath().normalize();
+                            if (file.startsWith(root) && Files.isRegularFile(file)) {
+                                mediaName = candidate;
+                                mediaFiles.add(ref);
+                            }
+                        }
                     }
                 } catch (RuntimeException ignored) {
                     // Invalid paths are omitted rather than trusted.
@@ -153,11 +166,15 @@ public class BackupController {
                 zip.putNextEntry(new ZipEntry("manifest.json"));
                 zip.write(manifestBytes);
                 zip.closeEntry();
-                for (Path file : mediaFiles) {
-                    String name = file.getFileName().toString();
+                for (String mediaRef : mediaFiles) {
+                    String name = mediaStorage.isR2(mediaRef)
+                            ? mediaRef.substring(mediaRef.lastIndexOf('/') + 1)
+                            : Path.of(mediaRef).getFileName().toString();
                     if (!MEDIA_NAME.matcher(name).matches()) continue;
                     zip.putNextEntry(new ZipEntry("media/" + name));
-                    Files.copy(file, zip);
+                    try (InputStream input = mediaStorage.openStream(mediaRef)) {
+                        input.transferTo(zip);
+                    }
                     zip.closeEntry();
                 }
                 zip.finish();

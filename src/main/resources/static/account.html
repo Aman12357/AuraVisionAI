@@ -65,6 +65,8 @@
     .plans { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
     .plan-card { border:1px solid var(--line); background:var(--plan-bg); border-radius:13px; padding:17px; display:flex; flex-direction:column; gap:8px; }
     .plan-price { font-size:25px; font-weight:700; letter-spacing:-.03em; }
+    .price-original { display:block; color:var(--muted); font-size:14px; font-weight:500; text-decoration:line-through; letter-spacing:0; margin-top:2px; }
+    .price-saving { display:block; color:var(--good); font-size:13px; font-weight:700; letter-spacing:0; margin-top:2px; }
     .plan-card .small { min-height:38px; color:var(--muted); }
     .plan-card button { width:100%; margin-top:8px; }
     .coupon-row { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto; align-items:end; gap:12px; margin:12px 0 4px; }
@@ -261,6 +263,10 @@
   document.querySelectorAll('input[name="billing"]').forEach(function (radio) {
     radio.addEventListener("change", function () { clearCoupon("Billing period changed. Apply the coupon again."); renderPlans(); });
   });
+  document.getElementById("couponPlan").addEventListener("change", function () {
+    if (couponQuote) clearCoupon("Plan changed. Apply the coupon again for the new plan.");
+    renderPlans();
+  });
 
   function clearCoupon(message) {
     couponCode = "";
@@ -285,12 +291,15 @@
       quote.planId = plan.id;
       quote.yearly = yearly;
       couponQuote = quote;
-      status.textContent = quote.code + " applied: " + quote.discountPercent + "% off " + money(quote.originalAmountRupees) + ". Discounted recurring amount: " + money(quote.discountedAmountRupees) + ". Razorpay will confirm the charge.";
+      var savedAmount = Math.max(0, Number(quote.originalAmountRupees) - Number(quote.discountedAmountRupees));
+      status.textContent = quote.code + " applied successfully. Original price: " + money(quote.originalAmountRupees) + ". New price: " + money(quote.discountedAmountRupees) + ". You save " + money(savedAmount) + " (" + Number(quote.discountPercent) + "%) each billing period.";
       status.className = "status good";
+      renderPlans();
     } catch (error) {
       couponCode = ""; couponQuote = null;
       status.textContent = error.message || "Coupon could not be applied.";
       status.className = "status bad";
+      renderPlans();
     } finally { this.disabled = false; }
   });
 
@@ -326,7 +335,17 @@
       var card = document.createElement("div"); card.className = "plan-card";
       var title = document.createElement("h3"); title.textContent = plan.name;
       var price = document.createElement("div"); price.className = "plan-price";
-      price.textContent = money(yearly ? plan.yearly : plan.monthly);
+      var regularAmount = Number(yearly ? plan.yearly : plan.monthly);
+      var discountedQuote = couponQuote && couponQuote.planId === plan.id && couponQuote.yearly === !!yearly ? couponQuote : null;
+      if (discountedQuote) {
+        var discountedAmount = Number(discountedQuote.discountedAmountRupees);
+        var original = document.createElement("span"); original.className = "price-original"; original.textContent = "Was " + money(regularAmount);
+        var current = document.createElement("span"); current.textContent = money(discountedAmount);
+        var saving = document.createElement("span"); saving.className = "price-saving"; saving.textContent = "You save " + money(Math.max(0, regularAmount - discountedAmount)) + " (" + Number(discountedQuote.discountPercent) + "%)";
+        price.append(current, original, saving);
+      } else {
+        price.textContent = money(regularAmount);
+      }
       var interval = document.createElement("div"); interval.className = "small";
       interval.textContent = yearly ? "per year · renews yearly" : "per month · renews monthly";
       var limits = document.createElement("p"); limits.className = "small";

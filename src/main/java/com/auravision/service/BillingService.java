@@ -53,7 +53,7 @@ public class BillingService {
         if (!razorpay.isConfigured()) {
             return "Live checkout is disabled until RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET are set in Render Environment.";
         }
-        return "Razorpay recurring checkout is configured. Test the full subscription flow in Razorpay Test Mode before enabling live charges.";
+        return "Razorpay one-time checkout is configured. Test a single payment in Razorpay Test Mode before enabling live charges.";
     }
 
     public Plan planFor(String owner) {

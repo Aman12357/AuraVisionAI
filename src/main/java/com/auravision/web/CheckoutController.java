@@ -56,12 +56,10 @@ public class CheckoutController {
     }
 
     @PostMapping("/subscriptions")
-    @ResponseStatus(HttpStatus.CREATED)
     public BillingService.CheckoutStart createSubscription(HttpServletRequest request,
                                                             @Valid @RequestBody SubscriptionRequest body) {
-        return couponCheckout.createSubscription(requireAccount(request),
-            (String) request.getAttribute(OwnerFilter.ACCOUNT_EMAIL_ATTR),
-            body.plan(), body.yearly(), body.couponCode());
+        throw new ResponseStatusException(HttpStatus.GONE,
+            "New recurring subscriptions are currently disabled. Existing subscriptions are not automatically cancelled.");
     }
 
     @PostMapping("/verify")

@@ -13,7 +13,7 @@
     document.documentElement.setAttribute("data-theme", savedTheme);
   })();
 </script>
-  <meta name="description" content="Manage your AuraVision AI account, subscription and billing history.">
+  <meta name="description" content="Manage your AuraVision AI account and one-time payment history.">
   <title>My Account · AuraVision AI</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,7 +102,7 @@
 <main class="wrap">
   <div class="eyebrow">Your workspace</div>
   <h1>My Account</h1>
-  <p class="muted">Sign in to keep your creations, subscription and billing history tied to your own account.</p>
+  <p class="muted">Sign in to keep your creations and one-time payment history tied to your own account.</p>
   <div id="setupStatus" class="status warn hidden" role="status"></div>
 
   <section id="authArea" class="auth-grid">
@@ -120,7 +120,7 @@
     </div>
     <div class="panel">
       <h2>One account, your own workspace</h2>
-      <p class="muted">Your subscription, account quota and server-side generation history are associated with your account. You can sign in from another browser to continue.</p>
+      <p class="muted">Your purchased access, account quota and server-side generation history are associated with your account. You can sign in from another browser to continue.</p>
       <p class="muted small">The site needs the owner's persistent database and approved Razorpay merchant account before live payments can be accepted.</p>
     </div>
   </section>
@@ -137,22 +137,22 @@
 
     <div class="panel" id="subscriptionNotice">
       <h2>Recurring subscriptions are currently unavailable</h2>
-      <p class="muted">New monthly and yearly subscriptions have been paused. Your existing subscription status and payment history remain available below. This change does not automatically cancel an existing subscription.</p>
+      <p class="muted">AuraVision AI now accepts one-time payments only. Each purchase provides 30-day or 365-day access and will not renew automatically. Existing subscriptions must still be cancelled in Razorpay Dashboard.</p>
     </div>
 
     <div id="plansPanel" class="panel hidden">
-      <h2>Choose a subscription</h2>
-      <p class="muted">Razorpay handles the actual payment and recurring billing mandate.</p>
+      <h2>Buy access once</h2>
+      <p class="muted">One payment only. No recurring billing, subscription, or automatic renewal.</p>
       <fieldset class="billing-controls">
-        <label><input type="radio" name="billing" value="monthly" checked> Monthly</label>
-        <label><input type="radio" name="billing" value="yearly"> Yearly billing (custom price)</label>
+        <label><input type="radio" name="billing" value="monthly" checked> 30 days · one-time</label>
+        <label><input type="radio" name="billing" value="yearly"> 365 days · one-time</label>
       </fieldset>
-      <div class="coupon-row">
+      <div class="coupon-row hidden">
         <div class="field coupon-field"><label for="couponInput">Discount coupon</label><input id="couponInput" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Enter coupon code"></div>
         <div class="field coupon-field"><label for="couponPlan">Apply to plan</label><select id="couponPlan"><option value="">Choose a plan</option></select></div>
         <div class="coupon-action"><button id="applyCoupon" class="secondary" type="button">Apply coupon</button></div>
       </div>
-      <p class="muted small" id="couponStatus" role="status" aria-live="polite">Coupons are validated by AuraVision's server. The discounted recurring price is shown in Razorpay Checkout.</p>
+      <p class="muted small" id="couponStatus" role="status" aria-live="polite">One-time payment only. Automatic renewal is disabled.</p>
       <div id="planCards" class="plans"></div>
       <div id="checkoutMessage" class="status hidden" role="status"></div>
     </div>
@@ -163,7 +163,7 @@
     </div>
   </section>
 
-  <div class="legal">Razorpay is the payment provider. Subscription activation follows signed payment notifications from Razorpay. Cancelled subscriptions keep access only through the paid-through date shown above.</div>
+  <div class="legal">Razorpay is the payment provider. Paid access is activated only after Razorpay confirms a captured one-time payment. Purchases do not renew automatically.</div>
 </main>
 
 <script>
@@ -352,7 +352,7 @@
         price.textContent = money(regularAmount);
       }
       var interval = document.createElement("div"); interval.className = "small";
-      interval.textContent = yearly ? "per year · renews yearly" : "per month · renews monthly";
+      interval.textContent = yearly ? "for 365 days · one-time payment" : "for 30 days · one-time payment";
       var limits = document.createElement("p"); limits.className = "small";
       limits.textContent = plan.imagesPerDay + " images per day · " + plan.videosPerDay + " videos per day";
       var button = document.createElement("button"); button.type = "button";
@@ -383,15 +383,15 @@
         throw new Error("Re-apply your coupon for the selected plan and billing period before checkout.");
       }
       var appliedCoupon = couponCode && couponQuote ? couponCode : null;
-      var checkout = await api("/api/checkout/subscriptions", "POST", { plan:planId, yearly:yearly, couponCode:appliedCoupon });
+      var checkout = await api("/api/checkout/one-time", "POST", { plan:planId, yearly:yearly });
       var options = {
         key:checkout.keyId,
-        subscription_id:checkout.subscriptionId,
+        order_id:checkout.razorpayOrderId,
         name:"AuraVision AI",
         description:checkout.description,
         image:"/favicon.svg",
         prefill:{ email:checkout.email },
-        notes:{ product:"AuraVision AI", plan:checkout.plan, billing:yearly ? "yearly" : "monthly" },
+        notes:{ product:"AuraVision AI", plan:checkout.plan, access_period:yearly ? "365 days (one-time)" : "30 days (one-time)" },
         theme:{ color:"#7aa7ff" },
         modal:{ ondismiss:function () {
           showStatus(document.getElementById("checkoutMessage"),
@@ -402,10 +402,10 @@
         handler:async function (response) {
           showStatus(document.getElementById("checkoutMessage"), "Verifying checkout response…", "");
           try {
-            await api("/api/checkout/verify", "POST", {
+            await api("/api/checkout/verify-one-time", "POST", {
               orderId:checkout.orderId,
+              razorpayOrderId:response.razorpay_order_id || checkout.razorpayOrderId,
               razorpayPaymentId:response.razorpay_payment_id,
-              razorpaySubscriptionId:response.razorpay_subscription_id || checkout.subscriptionId,
               razorpaySignature:response.razorpay_signature
             });
             var attempts = 0, purchase = null;
@@ -417,7 +417,7 @@
               attempts++;
             }
             if (purchase && purchase.status === "PAID") {
-              showStatus(document.getElementById("checkoutMessage"), "Payment verified. Your " + checkout.plan + " plan is active.", "good");
+              showStatus(document.getElementById("checkoutMessage"), "Payment verified. Your " + checkout.plan + " access is active for a fixed period. No renewal is scheduled.", "good");
             } else {
               showStatus(document.getElementById("checkoutMessage"),
                 "Razorpay returned the checkout signature, but the signed payment webhook has not arrived yet. Paid features stay locked until it confirms the charge.", "warn");
@@ -471,7 +471,7 @@
         var row = document.createElement("div"); row.className = "history-row";
         var left = document.createElement("div");
         var title = document.createElement("strong");
-        title.textContent = item.plan + (item.yearly ? " · Yearly" : " · Monthly");
+        title.textContent = item.plan + (item.yearly ? " · 365-day one-time access" : " · 30-day one-time access");
         var details = document.createElement("div"); details.className = "details";
         details.textContent = item.status + " · " + formatDate(item.createdAt) +
           (item.transactionReference ? " · Ref " + item.transactionReference : "");
@@ -509,7 +509,7 @@
     } else {
       statusBox.classList.add("hidden");
     }
-    document.getElementById("cancelButton").classList.toggle("hidden", account.subscriptionStatus !== "ACTIVE");
+    document.getElementById("cancelButton").classList.add("hidden");
     document.getElementById("plansPanel").classList.toggle("hidden",
       account.plan !== "FREE" || account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT");
     renderPlans();

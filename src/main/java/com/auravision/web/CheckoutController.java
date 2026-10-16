@@ -33,6 +33,8 @@ public class CheckoutController {
     public record CouponValidateRequest(@NotBlank @Size(max = 40) String code, @NotNull Plan plan, boolean yearly) {}
     public record VerifyRequest(@NotBlank String orderId, @NotBlank String razorpayPaymentId,
                                 @NotBlank String razorpaySubscriptionId, @NotBlank String razorpaySignature) {}
+    public record OneTimeVerifyRequest(@NotBlank String orderId, @NotBlank String razorpayOrderId,
+                                       @NotBlank String razorpayPaymentId, @NotBlank String razorpaySignature) {}
     public record CheckoutConfig(boolean ready, boolean databaseReady, boolean razorpayConfigured,
                                  String provider, String message) {}
     public record CancelView(String status, Instant expiresAt, String message) {}

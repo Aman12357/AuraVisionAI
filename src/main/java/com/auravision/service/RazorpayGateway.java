@@ -31,6 +31,28 @@ public class RazorpayGateway {
             "Razorpay is not configured. In Render Environment set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET. Keep secret values private.");
     }
 
+    public String createOrder(int amountRupees, String internalPurchaseId, Plan plan, boolean yearly, String email) {
+        requireConfigured();
+        if (amountRupees < 1 || internalPurchaseId == null || internalPurchaseId.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A positive amount and purchase reference are required.");
+        Map<String, Object> request = Map.of(
+            "amount", Math.multiplyExact(amountRupees, 100),
+            "currency", "INR",
+            "receipt", internalPurchaseId,
+            "notes", Map.of("product", "AuraVision AI", "plan", plan.name(),
+                "access_period", yearly ? "365 days" : "30 days", "customer_email", email)
+        );
+        JsonNode response = post("/orders", request);
+        String id = response.path("id").asText("");
+        if (id.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Razorpay did not return an order id.");
+        return id;
+    }
+
+    public boolean verifyOrderSignature(String orderId, String paymentId, String signature) {
+        if (!present(keySecret) || !present(orderId) || !present(paymentId) || !present(signature)) return false;
+        return constantTimeEquals(hmacHex((orderId + "|" + paymentId).getBytes(StandardCharsets.UTF_8), keySecret), signature.trim());
+    }
+
     public String createPlan(Plan plan, boolean yearly) {
         return createPlan(plan, yearly, plan.price(yearly));
     }

@@ -32,6 +32,8 @@ public class BillingService {
 
     public record CheckoutStart(String orderId, String subscriptionId, String keyId, String email,
                                 String plan, boolean yearly, int amountRupees, String description) {}
+    public record OneTimeCheckoutStart(String orderId, String razorpayOrderId, String keyId, String email,
+                                       String plan, boolean yearly, int amountRupees, String description) {}
     public record PurchaseStatus(String orderId, String status, String plan, boolean yearly,
                                  int amountRupees, Instant paidAt, Instant expiresAt) {}
     public record HistoryItem(String orderId, String plan, boolean yearly, int amountRupees,
@@ -66,6 +68,54 @@ public class BillingService {
     }
     public Optional<String> subscriptionStatus(String owner) {
         return subs.findByOwnerToken(owner).map(Subscription::getStatus);
+    }
+
+    /** Creates a single-charge order. Access is granted only after a verified captured payment. */
+    @Transactional
+    public OneTimeCheckoutStart createOneTimeOrder(String owner, String email, Plan plan, boolean yearly) {
+        if (!paymentSetupReady()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, paymentSetupMessage());
+        if (plan == null || plan == Plan.FREE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a paid plan.");
+        if (planFor(owner) != Plan.FREE) throw new ResponseStatusException(HttpStatus.CONFLICT,
+            "You already have active paid access. Wait until it expires before purchasing another plan.");
+        int amount = pricing.price(plan, yearly);
+        Payment purchase = new Payment();
+        purchase.setOrderId("AV" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
+        purchase.setOwnerToken(owner);
+        purchase.setPlan(plan);
+        purchase.setYearly(yearly);
+        purchase.setAmountRupees(amount);
+        purchase.setEmail(email);
+        purchase.setStatus(Payment.Status.CREATED);
+        purchase = payments.saveAndFlush(purchase);
+        try {
+            String razorpayOrderId = razorpay.createOrder(amount, purchase.getId().toString(), plan, yearly, email);
+            // Legacy column stores the provider reference for both old subscriptions and one-time orders.
+            purchase.setRazorpaySubscriptionId(razorpayOrderId);
+            purchase.setStatus(Payment.Status.PENDING);
+            payments.save(purchase);
+            return new OneTimeCheckoutStart(purchase.getOrderId(), razorpayOrderId, razorpay.publicKeyId(), email,
+                plan.name(), yearly, amount, title(plan.name()) + (yearly ? " 365-day access (one-time)" : " 30-day access (one-time)"));
+        } catch (RuntimeException e) {
+            purchase.setStatus(Payment.Status.FAILED);
+            payments.save(purchase);
+            throw e;
+        }
+    }
+
+    /** Verifies a one-time order signature; activation waits for the captured-payment webhook. */
+    @Transactional
+    public PurchaseStatus verifyOneTimeCheckout(String owner, String orderId, String razorpayOrderId,
+                                                String paymentId, String signature) {
+        Payment purchase = payments.findByOrderIdAndOwnerToken(orderId, owner)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Purchase not found."));
+        if (purchase.getRazorpaySubscriptionId() == null || !purchase.getRazorpaySubscriptionId().equals(razorpayOrderId))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Razorpay order does not match this purchase.");
+        if (!razorpay.verifyOrderSignature(razorpayOrderId, paymentId, signature))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Razorpay payment signature could not be verified.");
+        purchase.setCheckoutPaymentId(paymentId);
+        if (purchase.getStatus() != Payment.Status.PAID) purchase.setStatus(Payment.Status.PENDING);
+        payments.save(purchase);
+        return purchaseStatus(owner, orderId);
     }
 
     /** Creates a real recurring subscription. Access is not activated by creating checkout. */
@@ -182,6 +232,20 @@ public class BillingService {
         JsonNode paymentEntity = root.path("payload").path("payment").path("entity");
         String subscriptionId = subscriptionEntity.path("id").asText("");
         if (subscriptionId.isBlank()) subscriptionId = paymentEntity.path("subscription_id").asText("");
+        if (subscriptionId.isBlank() && "payment.captured".equals(event)) {
+            String razorpayOrderId = paymentEntity.path("order_id").asText("");
+            Payment oneTime = payments.findFirstByRazorpaySubscriptionIdOrderByCreatedAtAsc(razorpayOrderId).orElse(null);
+            if (oneTime != null) {
+                String paymentId = paymentEntity.path("id").asText("");
+                long amount = paymentEntity.path("amount").asLong(-1L);
+                String paymentStatus = paymentEntity.path("status").asText("");
+                if (!paymentId.isBlank() && amount == (long) oneTime.getAmountRupees() * 100L
+                    && "captured".equalsIgnoreCase(paymentStatus)) {
+                    activateOneTimePurchase(oneTime, paymentEntity);
+                }
+            }
+            return;
+        }
         if (subscriptionId.isBlank()) return;
 
         Payment original = payments.findFirstByRazorpaySubscriptionIdOrderByCreatedAtAsc(subscriptionId).orElse(null);
@@ -217,6 +281,26 @@ public class BillingService {
                 // Unneeded event types are acknowledged; Razorpay can deliver additional events over time.
             }
         }
+    }
+
+    private void activateOneTimePurchase(Payment purchase, JsonNode providerPayment) {
+        String paymentId = providerPayment.path("id").asText("");
+        if (paymentId.isBlank() || payments.findByGatewayPaymentId(paymentId).isPresent()) return;
+        Instant now = Instant.now();
+        Subscription local = subs.findByOwnerToken(purchase.getOwnerToken()).orElseGet(Subscription::new);
+        local.setOwnerToken(purchase.getOwnerToken());
+        local.setPlan(purchase.getPlan());
+        local.setEmail(purchase.getEmail());
+        local.setRazorpaySubscriptionId(null);
+        local.setStatus("ACTIVE");
+        local.setExpiresAt(now.plus(purchase.isYearly() ? Duration.ofDays(365) : Duration.ofDays(30)));
+        subs.save(local);
+        purchase.setGatewayPaymentId(paymentId);
+        purchase.setTxnRef(paymentId);
+        purchase.setMethod(providerPayment.path("method").asText("razorpay"));
+        purchase.setStatus(Payment.Status.PAID);
+        purchase.setPaidAt(now);
+        payments.save(purchase);
     }
 
     private void markPending(Payment purchase, String subscriptionId) {

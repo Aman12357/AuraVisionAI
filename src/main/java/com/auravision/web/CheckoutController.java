@@ -55,6 +55,16 @@ public class CheckoutController {
         return couponCheckout.quote(body.code(), body.plan(), body.yearly());
     }
 
+    @PostMapping("/one-time")
+    public BillingService.OneTimeCheckoutStart createOneTimeOrder(HttpServletRequest request, @Valid @RequestBody SubscriptionRequest body) {
+        return billing.createOneTimeOrder(requireAccount(request), "", body.plan(), body.yearly());
+    }
+
+    @PostMapping("/verify-one-time")
+    public BillingService.PurchaseStatus verifyOneTime(HttpServletRequest request, @Valid @RequestBody OneTimeVerifyRequest body) {
+        return billing.verifyOneTimeCheckout(requireAccount(request), body.orderId(), body.razorpayOrderId(), body.razorpayPaymentId(), body.razorpaySignature());
+    }
+
     @PostMapping("/subscriptions")
     public BillingService.CheckoutStart createSubscription(HttpServletRequest request,
                                                             @Valid @RequestBody SubscriptionRequest body) {

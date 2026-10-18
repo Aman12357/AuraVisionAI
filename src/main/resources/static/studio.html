@@ -1952,9 +1952,12 @@
     }
 
     async function loadActiveAccount() {
+      // Never keep a stale signed-in account or stale browser-only balance after a failed response.
       try {
-        const response = await fetch('/api/auth/me', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
-        if (response.ok) activeAccount = await response.json();
+        const response = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } });
+        activeAccount = response.ok
+          ? await response.json()
+          : { authenticated: false, email: null, storageKey: 'visitor' };
       } catch (error) {
         activeAccount = { authenticated: false, email: null, storageKey: 'visitor' };
       }
@@ -1966,9 +1969,28 @@
         ? activeAccount.email.split('@')[0] : 'Sign in';
       if (avatarEl) avatarEl.textContent = activeAccount.authenticated && activeAccount.email
         ? activeAccount.email.charAt(0).toUpperCase() : 'A';
-      if (activeAccount.authenticated && Number.isFinite(Number(activeAccount.imagesLeft))) {
-        localStorage.setItem(storageKey('aura_credits'), String(activeAccount.imagesLeft));
+
+      // The server is the source of truth for both accounts and visitors.
+      // /api/auth/me includes the signed-in account balance; /api/me returns visitor quota.
+      let serverCredits = Number(activeAccount.imagesLeft);
+      if (!activeAccount.authenticated || !Number.isFinite(serverCredits)) {
+        try {
+          const usageResponse = await fetch('/api/me', { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } });
+          if (usageResponse.ok) {
+            const usage = await usageResponse.json();
+            serverCredits = Number(usage.imagesLeft);
+          } else {
+            serverCredits = NaN;
+          }
+        } catch (error) {
+          serverCredits = NaN;
+        }
       }
+      if (Number.isFinite(serverCredits) && serverCredits >= 0) {
+        localStorage.setItem(storageKey('aura_credits'), String(serverCredits));
+        setCredits(serverCredits);
+      }
+      return serverCredits;
     }
 
     function updateImageModelAccess() {

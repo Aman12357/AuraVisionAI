@@ -54,11 +54,9 @@ public class GenerationService {
                     "You already have " + maxActive + " generations in progress. Wait for one to finish.");
 
         Plan plan = billing.planFor(owner);
-        if (type == Generation.Type.IMAGE
-                && !CloudflareImageClient.MODEL_KEY.equals(selectedModel)
-                && plan == Plan.FREE) {
+        if (type == Generation.Type.IMAGE && !modelAllowedForPlan(plan, selectedModel)) {
             throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,
-                    "AuraVision Lite, Standard, and Pro require an active paid plan. Purchase any paid plan in My Account to unlock these image modes.");
+                    "This image mode is not included in your current plan. Free uses AuraVision Fast; PLUS unlocks Lite, PRO unlocks Standard, and ULTRA unlocks Pro.");
         }
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
         long used = usedToday(owner, type);
@@ -98,6 +96,15 @@ public class GenerationService {
                 (int) Math.max(0, p.imagesPerDay - usedToday(owner, Generation.Type.IMAGE)) + bonusImages,
                 (int) Math.max(0, p.videosPerDay - usedToday(owner, Generation.Type.VIDEO)) + bonusVideos,
                 billing.expiry(owner).orElse(null));
+    }
+
+    private static boolean modelAllowedForPlan(Plan plan, String model) {
+        return switch (plan) {
+            case FREE -> CloudflareImageClient.MODEL_KEY.equals(model);
+            case PLUS -> "gemini-3.1-flash-lite-image".equals(model);
+            case PRO -> "gemini-3.1-flash-image".equals(model);
+            case ULTRA -> "gemini-3-pro-image".equals(model);
+        };
     }
 
     private boolean consumeBonusCredit(String owner, Generation.Type type) {

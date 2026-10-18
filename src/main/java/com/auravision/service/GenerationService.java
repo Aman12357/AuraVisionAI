@@ -110,8 +110,9 @@ public class GenerationService {
     private boolean consumeBonusCredit(String owner, Generation.Type type) {
         AccountUser user = users.findByOwnerToken(owner).orElse(null);
         if (user == null) return false;
-        if (type == Generation.Type.IMAGE && user.getBonusImageCredits() > 0) {
-            user.setBonusImageCredits(user.getBonusImageCredits() - 1);
+        // Image generations consume two bonus image credits per successful request.
+        if (type == Generation.Type.IMAGE && user.getBonusImageCredits() >= 2) {
+            user.setBonusImageCredits(user.getBonusImageCredits() - 2);
             users.save(user);
             return true;
         }

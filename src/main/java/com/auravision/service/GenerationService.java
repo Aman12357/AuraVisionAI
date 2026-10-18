@@ -54,6 +54,12 @@ public class GenerationService {
                     "You already have " + maxActive + " generations in progress. Wait for one to finish.");
 
         Plan plan = billing.planFor(owner);
+        if (type == Generation.Type.IMAGE
+                && !CloudflareImageClient.MODEL_KEY.equals(selectedModel)
+                && plan == Plan.FREE) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,
+                    "AuraVision Lite, Standard, and Pro require an active paid plan. Purchase any paid plan in My Account to unlock these image modes.");
+        }
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
         long used = usedToday(owner, type);
         boolean bonusCreditUsed = false;

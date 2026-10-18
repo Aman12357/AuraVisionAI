@@ -20,9 +20,21 @@ public class Payment {
     @Enumerated(EnumType.STRING) @Column(nullable = false)
     private Plan plan;
     private boolean yearly;
-    /** Nullable so existing payment rows can be migrated without losing data. */
+    /**
+     * Nullable for compatibility with existing database rows. Treat SQL NULL as
+     * false in business logic; do not map this field to a Java primitive.
+     */
     @Column(nullable = true)
-    private boolean upgrade;
+    private Boolean upgrade = Boolean.FALSE;
+
+    public boolean isUpgrade() {
+        return Boolean.TRUE.equals(upgrade);
+    }
+
+    public void setUpgrade(boolean upgrade) {
+        this.upgrade = upgrade;
+    }
+
     private int amountRupees;
     @Column(length = 40)
     private String couponCode;

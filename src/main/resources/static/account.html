@@ -161,6 +161,22 @@
         <div class="actions"><a class="button secondary" href="https://aurapay-jp4s.onrender.com" target="_blank" rel="noopener noreferrer">Open AuraPay demo ↗</a></div>
         <p class="muted small" style="margin:10px 0 0">Your existing Razorpay checkout remains the primary payment method. Do not treat an AuraPay demo order as a completed purchase.</p>
       </div>
+      <div class="panel hidden" id="aurapayQrPanel" style="margin-top:18px;background:var(--plan-bg)">
+        <div class="eyebrow">UPI · AuraPay synced QR</div>
+        <h3 style="margin-top:7px">Pay using your UPI app</h3>
+        <p class="muted small">This QR is synced from AuraPay. Scan it with your UPI app and check the payee name and amount carefully before authorizing a transfer.</p>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.8fr);gap:18px;align-items:center;margin-top:14px">
+          <div style="text-align:center;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)">
+            <img id="aurapayQrImage" alt="Personal UPI payment QR synced from AuraPay" hidden style="width:min(100%,260px);aspect-ratio:1;object-fit:contain;background:#fff;border-radius:8px;padding:8px">
+            <p id="aurapayQrStatus" class="muted small" role="status">Checking for the current AuraPay QR…</p>
+          </div>
+          <div>
+            <p class="small"><strong>Important payment verification notice</strong></p>
+            <p class="muted small">A QR scan, payment screenshot, or “I paid” message does not prove that money arrived. UPI transfers made with this QR are not automatically verified by AuraVision AI.</p>
+            <p class="muted small">Do not use this route to request credit activation yet. Paid access is granted only after the existing verified Razorpay checkout confirms a captured payment. Manual UPI reconciliation and approval are not enabled.</p>
+          </div>
+        </div>
+      </div>
       <div id="checkoutMessage" class="status hidden" role="status"></div>
     </div>
 
@@ -547,6 +563,38 @@
     updateSiteThemeButton(nextTheme);
   }
   updateSiteThemeButton(document.documentElement.getAttribute("data-theme") || "dark");
+</script>
+<script>
+(function () {
+  "use strict";
+  var panel = document.getElementById("aurapayQrPanel");
+  var image = document.getElementById("aurapayQrImage");
+  var status = document.getElementById("aurapayQrStatus");
+  if (!panel || !image || !status) return;
+  var currentUrl = null;
+  fetch("/api/checkout/upi-qr", { cache: "no-store", credentials: "same-origin", headers: { "Accept": "image/*" } })
+    .then(function (response) {
+      if (response.status === 404) throw new Error("No UPI QR has been uploaded to AuraPay yet.");
+      if (!response.ok) throw new Error("AuraPay QR is temporarily unavailable.");
+      var type = response.headers.get("content-type") || "";
+      if (!type.toLowerCase().startsWith("image/")) throw new Error("AuraPay did not return a valid QR image.");
+      return response.blob();
+    })
+    .then(function (blob) {
+      currentUrl = URL.createObjectURL(blob);
+      image.src = currentUrl;
+      image.hidden = false;
+      status.textContent = "Current QR loaded from AuraPay.";
+      panel.classList.remove("hidden");
+    })
+    .catch(function (error) {
+      status.textContent = error.message || "QR could not be loaded.";
+      panel.classList.remove("hidden");
+    });
+  window.addEventListener("pagehide", function () {
+    if (currentUrl) URL.revokeObjectURL(currentUrl);
+  });
+})();
 </script>
 </body>
 </html>

@@ -59,8 +59,9 @@ public class GenerationService {
             throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,
                     "This image model is not included in your current plan. Free unlocks AuraVision Fast, PLUS unlocks Lite, PRO unlocks Standard, and ULTRA unlocks Pro.");
         }
-        int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
         int creditCost = type == Generation.Type.IMAGE ? IMAGE_CREDIT_COST : 1;
+        // Daily image allowances are measured in images in Plan, while usage is measured in credits.
+        int limit = type == Generation.Type.IMAGE ? plan.imagesPerDay * IMAGE_CREDIT_COST : plan.videosPerDay;
         long used = usedToday(owner, type);
         boolean bonusCreditUsed = false;
         if (used + creditCost > limit) {
@@ -95,7 +96,7 @@ public class GenerationService {
         int bonusImages = user == null ? 0 : user.getBonusImageCredits();
         int bonusVideos = user == null ? 0 : user.getBonusVideoCredits();
         return new Usage(p,
-                (int) Math.max(0, p.imagesPerDay - usedToday(owner, Generation.Type.IMAGE)) + bonusImages,
+                (int) Math.max(0, (long) p.imagesPerDay * IMAGE_CREDIT_COST - usedToday(owner, Generation.Type.IMAGE)) + bonusImages,
                 (int) Math.max(0, p.videosPerDay - usedToday(owner, Generation.Type.VIDEO)) + bonusVideos,
                 billing.expiry(owner).orElse(null));
     }

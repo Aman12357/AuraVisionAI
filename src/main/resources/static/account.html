@@ -141,8 +141,8 @@
     </div>
 
     <div id="plansPanel" class="panel hidden">
-      <h2>Buy access once</h2>
-      <p class="muted">One payment only. No recurring billing, subscription, or automatic renewal.</p>
+      <h2 id="plansHeading">Buy access once</h2>
+      <p class="muted" id="plansDescription">One payment only. No recurring billing, subscription, or automatic renewal.</p>
       <fieldset class="billing-controls">
         <label><input type="radio" name="billing" value="monthly" checked> 30 days · one-time</label>
         <label><input type="radio" name="billing" value="yearly"> 365 days · one-time</label>
@@ -348,7 +348,13 @@
       couponPlanSelect.appendChild(option);
     });
     if (plans.some(function (plan) { return plan.id === selectedCouponPlan; })) couponPlanSelect.value = selectedCouponPlan;
+    var currentRank = planRank(account && account.plan);
+    document.getElementById("plansHeading").textContent = currentRank > 0 ? "Upgrade your plan" : "Buy access once";
+    document.getElementById("plansDescription").textContent = currentRank > 0
+      ? "Move to a higher model by paying only the remaining price difference. Your existing paid-through date stays the same."
+      : "One payment only. No recurring billing, subscription, or automatic renewal.";
     plans.forEach(function (plan) {
+      if (planRank(plan.id) <= currentRank) return;
       var card = document.createElement("div"); card.className = "plan-card";
       var title = document.createElement("h3"); title.textContent = plan.name;
       var price = document.createElement("div"); price.className = "plan-price";
@@ -368,16 +374,21 @@
       var limits = document.createElement("p"); limits.className = "small";
       limits.textContent = plan.imagesPerDay + " images per day · " + plan.videosPerDay + " videos per day";
       var button = document.createElement("button"); button.type = "button";
-      button.textContent = "Choose " + plan.name;
-      button.disabled = !account || !config.ready || account.plan !== "FREE" ||
+      var isUpgrade = currentRank > 0;
+      button.textContent = isUpgrade ? "Upgrade to " + plan.name : "Choose " + plan.name;
+      button.disabled = !account || !config.ready ||
         account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT";
-      button.addEventListener("click", function () { startCheckout(plan.id, yearly, button); });
+      button.addEventListener("click", function () { startCheckout(plan.id, yearly, button, isUpgrade); });
       card.append(title, price, interval, limits, button);
       container.appendChild(card);
     });
   }
 
-  async function startCheckout(planId, yearly, button) {
+  function planRank(id) { return ({ FREE:0, PLUS:1, PRO:2, ULTRA:3 })[String(id || "FREE").toUpperCase()] || 0; }
+
+  function checkoutButtonLabel(planId, upgrade) { return (upgrade ? "Upgrade to " : "Choose ") + titleCase(planId); }
+
+  async function startCheckout(planId, yearly, button, upgrade) {
     if (!account) {
       showStatus(authStatus, "Sign in or create an account first.", "warn");
       document.getElementById("authArea").scrollIntoView({ behavior:"smooth" }); return;
@@ -395,7 +406,10 @@
         throw new Error("Re-apply your coupon for the selected plan and billing period before checkout.");
       }
       var appliedCoupon = couponCode && couponQuote ? couponCode : null;
-      var checkout = await api("/api/checkout/one-time", "POST", { plan:planId, yearly:yearly });
+      var checkout = await api("/api/checkout/one-time", "POST", { plan:planId, yearly:yearly, upgrade:!!upgrade });
+      showStatus(document.getElementById("checkoutMessage"), upgrade
+        ? "Upgrade amount due: " + money(checkout.amountRupees) + ". Review this remaining balance in Razorpay Checkout before paying."
+        : "Checkout amount: " + money(checkout.amountRupees) + ". Review the one-time payment in Razorpay Checkout.", "");
       var options = {
         key:checkout.keyId,
         order_id:checkout.razorpayOrderId,
@@ -403,13 +417,13 @@
         description:checkout.description,
         image:"/favicon.svg",
         prefill:{ email:checkout.email },
-        notes:{ product:"AuraVision AI", plan:checkout.plan, access_period:yearly ? "365 days (one-time)" : "30 days (one-time)" },
+        notes:{ product:"AuraVision AI", plan:checkout.plan, access_period:checkout.yearly ? "365 days (one-time)" : "30 days (one-time)", upgrade:!!upgrade },
         theme:{ color:"#7aa7ff" },
         modal:{ ondismiss:function () {
           showStatus(document.getElementById("checkoutMessage"),
             "Checkout was closed. If you completed payment, a verified webhook will update your account.", "warn");
           button.disabled = false;
-          button.textContent = "Choose " + titleCase(planId);
+          button.textContent = checkoutButtonLabel(planId, upgrade);
         }},
         handler:async function (response) {
           showStatus(document.getElementById("checkoutMessage"), "Verifying checkout response…", "");
@@ -429,7 +443,9 @@
               attempts++;
             }
             if (purchase && purchase.status === "PAID") {
-              showStatus(document.getElementById("checkoutMessage"), "Payment verified. Your " + checkout.plan + " access is active for a fixed period. No renewal is scheduled.", "good");
+              showStatus(document.getElementById("checkoutMessage"), upgrade
+                ? "Upgrade payment verified. Your " + checkout.plan + " model is now unlocked through your existing paid-through date."
+                : "Payment verified. Your " + checkout.plan + " access is active for a fixed period. No renewal is scheduled.", "good");
             } else {
               showStatus(document.getElementById("checkoutMessage"),
                 "Razorpay returned the checkout signature, but the signed payment webhook has not arrived yet. Paid features stay locked until it confirms the charge.", "warn");
@@ -438,7 +454,7 @@
           } catch (error) {
             showStatus(document.getElementById("checkoutMessage"), error.message, "bad");
             button.disabled = false;
-            button.textContent = "Choose " + titleCase(planId);
+            button.textContent = checkoutButtonLabel(planId, upgrade);
           }
         }
       };
@@ -446,7 +462,7 @@
       instance.on("payment.failed", function () {
         showStatus(document.getElementById("checkoutMessage"), "Payment failed or was declined. No paid access was granted.", "bad");
         button.disabled = false;
-        button.textContent = "Choose " + titleCase(planId);
+        button.textContent = checkoutButtonLabel(planId, upgrade);
       });
       instance.open();
     } catch (error) {
@@ -523,7 +539,7 @@
     }
     document.getElementById("cancelButton").classList.add("hidden");
     document.getElementById("plansPanel").classList.toggle("hidden",
-      account.plan !== "FREE" || account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT");
+      account.subscriptionStatus === "PENDING" || account.subscriptionStatus === "PENDING_PAYMENT");
     renderPlans();
     await loadHistory();
   }

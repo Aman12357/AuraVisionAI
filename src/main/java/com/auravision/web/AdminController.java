@@ -5,7 +5,6 @@ import com.auravision.model.Plan;
 import com.auravision.model.PlanPricing;
 import com.auravision.repo.AccountSessionRepository;
 import com.auravision.repo.AccountUserRepository;
-import com.auravision.service.AdminCouponService;
 import com.auravision.service.GenerationService;
 import com.auravision.service.PasswordHasher;
 import com.auravision.service.PlanPricingService;
@@ -38,7 +37,6 @@ public class AdminController {
     private final AccountSessionRepository sessions;
     private final GenerationService generations;
     private final PasswordHasher passwordHasher;
-    private final AdminCouponService coupons;
     private final PlanPricingService pricing;
 
     @Value("${AURA_ADMIN_EMAIL:}") private String adminEmail;
@@ -51,9 +49,6 @@ public class AdminController {
                               int bonusImageCredits, int bonusVideoCredits) {}
     public record CreditAdjustment(int imageDelta, int videoDelta) {}
     public record PasswordReset(@NotBlank @Size(min = 10, max = 128) String newPassword) {}
-    public record CouponCreate(@NotBlank @Size(min = 3, max = 40) String code,
-                               int discountPercent, Integer maxRedemptions, Instant expiresAt) {}
-    public record CouponActive(boolean active) {}
     public record PricingUpdate(int monthlyRupees, int yearlyRupees) {}
     public record PricingView(String plan, String name, int monthlyRupees, int yearlyRupees,
                               int imagesPerDay, int videosPerDay) {}
@@ -159,26 +154,6 @@ public class AdminController {
         Plan plan = row.getPlan();
         return new PricingView(plan.name(), plan.name().substring(0, 1) + plan.name().substring(1).toLowerCase(Locale.ROOT),
             row.getMonthlyRupees(), row.getYearlyRupees(), plan.imagesPerDay, plan.videosPerDay);
-    }
-
-    @GetMapping("/api/admin/coupons")
-    public List<AdminCouponService.CouponView> listCoupons(HttpServletRequest request) {
-        requireAdmin(request);
-        return coupons.list();
-    }
-
-    @PostMapping("/api/admin/coupons")
-    public AdminCouponService.CouponView createCoupon(HttpServletRequest request,
-                                                       @Valid @RequestBody CouponCreate body) {
-        requireAdmin(request);
-        return coupons.create(body.code(), body.discountPercent(), body.maxRedemptions(), body.expiresAt());
-    }
-
-    @PostMapping("/api/admin/coupons/{id}/active")
-    public AdminCouponService.CouponView setCouponActive(HttpServletRequest request, @PathVariable Long id,
-                                                         @Valid @RequestBody CouponActive body) {
-        requireAdmin(request);
-        return coupons.setActive(id, body.active());
     }
 
     private AccountUser findUser(Long id) {

@@ -1490,7 +1490,7 @@
       <div class="nav-actions">
         <div class="credits-pill" title="Remaining generation credits">
           <span class="credits-icon">⚡</span>
-          <span id="creditsCount">25</span> Credits
+          <span id="creditsCount">25</span> Credits <span style="color:var(--muted);font-size:11px;">(2 per image)</span>
         </div>
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Switch theme" aria-pressed="false" title="Switch theme">
           🌓
@@ -1934,6 +1934,7 @@
     let currentStyle = STYLES[0].id;
     let currentAspect = ASPECT_RATIOS[0].id;
     let currentQuality = 'HD';
+    const IMAGE_CREDIT_COST = 2;
     let currentCount = 2;
     let isGenerating = false;
     let currentSessionImages = [];
@@ -2371,8 +2372,8 @@
       }
 
       const credits = getCredits();
-      if (credits < 2) {
-        showToast('Each image costs 2 credits. You need at least 2 credits to generate an image.', 'danger');
+      if (credits < IMAGE_CREDIT_COST) {
+        showToast('Each image costs ' + IMAGE_CREDIT_COST + ' credits. You need at least ' + IMAGE_CREDIT_COST + ' credits to generate an image.', 'danger');
         openAuthModal();
         return;
       }
@@ -2381,7 +2382,7 @@
       const aspectRatio = currentAspect;
       const style = STYLES.find(s => s.id === currentStyle);
       const finalPrompt = prompt + (style && style.promptSuffix ? style.promptSuffix : '');
-      const requestedCount = Math.min(currentCount, Math.floor(credits / 2));
+      const requestedCount = Math.min(currentCount, Math.floor(credits / IMAGE_CREDIT_COST));
       const baseSeed = parseInt(document.getElementById('seedInput').value, 10) || Math.floor(Math.random() * 88888);
       const newImages = [];
       const startTime = performance.now();
@@ -2461,7 +2462,11 @@
         currentSessionImages = [...newImages, ...currentSessionImages];
         const existing = getStoredCreations();
         saveStoredCreations([...newImages, ...existing].slice(0, 300));
-        setCredits(Math.max(0, credits - newImages.length * 2));
+        setCredits(Math.max(0, credits - newImages.length * IMAGE_CREDIT_COST));
+        // Re-read the server's authoritative balance so the Studio never falls back to a stale local count.
+        await loadActiveAccount();
+        const serverCredits = Number(activeAccount.imagesLeft);
+        if (activeAccount.authenticated && Number.isFinite(serverCredits)) setCredits(Math.max(0, serverCredits));
         incrementGenerations(newImages.length);
 
         const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);

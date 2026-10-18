@@ -2371,8 +2371,8 @@
       }
 
       const credits = getCredits();
-      if (credits <= 0) {
-        showToast('You have used all credits. Upgrade to continue creating!', 'danger');
+      if (credits < 2) {
+        showToast('Each image costs 2 credits. You need at least 2 credits to generate an image.', 'danger');
         openAuthModal();
         return;
       }
@@ -2381,7 +2381,7 @@
       const aspectRatio = currentAspect;
       const style = STYLES.find(s => s.id === currentStyle);
       const finalPrompt = prompt + (style && style.promptSuffix ? style.promptSuffix : '');
-      const requestedCount = Math.min(currentCount, credits);
+      const requestedCount = Math.min(currentCount, Math.floor(credits / 2));
       const baseSeed = parseInt(document.getElementById('seedInput').value, 10) || Math.floor(Math.random() * 88888);
       const newImages = [];
       const startTime = performance.now();
@@ -2461,7 +2461,7 @@
         currentSessionImages = [...newImages, ...currentSessionImages];
         const existing = getStoredCreations();
         saveStoredCreations([...newImages, ...existing].slice(0, 300));
-        setCredits(Math.max(0, credits - newImages.length));
+        setCredits(Math.max(0, credits - newImages.length * 2));
         incrementGenerations(newImages.length);
 
         const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);

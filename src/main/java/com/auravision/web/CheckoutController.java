@@ -29,7 +29,7 @@ public class CheckoutController {
     private final PlanPricingService pricing;
 
     public record PlanView(String id, String name, int monthly, int yearly, int imagesPerDay, int videosPerDay) {}
-    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly, @Size(max = 40) String couponCode) {}
+    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly, @Size(max = 40) String couponCode, boolean upgrade) {}
     public record CouponValidateRequest(@NotBlank @Size(max = 40) String code, @NotNull Plan plan, boolean yearly) {}
     public record VerifyRequest(@NotBlank String orderId, @NotBlank String razorpayPaymentId,
                                 @NotBlank String razorpaySubscriptionId, @NotBlank String razorpaySignature) {}
@@ -59,7 +59,7 @@ public class CheckoutController {
 
     @PostMapping("/one-time")
     public BillingService.OneTimeCheckoutStart createOneTimeOrder(HttpServletRequest request, @Valid @RequestBody SubscriptionRequest body) {
-        return billing.createOneTimeOrder(requireAccount(request), "", body.plan(), body.yearly());
+        return billing.createOneTimeOrder(requireAccount(request), "", body.plan(), body.yearly(), body.upgrade());
     }
 
     @PostMapping("/verify-one-time")

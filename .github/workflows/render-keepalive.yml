@@ -7,29 +7,33 @@ on:
     paths:
       - ".github/workflows/render-keepalive.yml"
   schedule:
-    # GitHub Actions schedules run no more frequently than every 5 minutes.
+    # GitHub schedules are UTC and can be delayed; ping every 5 minutes.
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
 concurrency:
   group: auravision-render-keepalive
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   ping-render:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 3
     steps:
-      - name: Check AuraVision AI backend and database
+      - name: Ping the live website and keep the service warm
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error \
-            --max-time 25 \
+          # Use the real public homepage instead of the unverified /api/health route.
+          # A cold Render start can take longer than 25 seconds, so allow up to 90 seconds.
+          curl --location --fail --silent --show-error \
+            --connect-timeout 20 \
+            --max-time 90 \
             --retry 2 \
-            --retry-delay 3 \
+            --retry-delay 5 \
             --retry-all-errors \
-            --output /tmp/auravision-health-response.txt \
-            --write-out "HTTP status: %{http_code}\n" \
-            https://auravisionai-docker.onrender.com/api/health
-          cat /tmp/auravision-health-response.txt
+            --output /tmp/auravision-homepage.html \
+            --write-out "HTTP status: %{http_code}; total time: %{time_total}s\n" \
+            https://auravisionai-docker.onrender.com/
+          test -s /tmp/auravision-homepage.html
+          echo "Homepage returned content successfully."

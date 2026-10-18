@@ -20,7 +20,8 @@ public class Payment {
     @Enumerated(EnumType.STRING) @Column(nullable = false)
     private Plan plan;
     private boolean yearly;
-    /** True when this one-time payment upgrades an already-active paid plan. */
+    /** Nullable so existing payment rows can be migrated without losing data. */
+    @Column(nullable = true)
     private boolean upgrade;
     private int amountRupees;
     @Column(length = 40)

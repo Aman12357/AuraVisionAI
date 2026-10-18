@@ -32,7 +32,7 @@ public class GenerationCreditService {
         }
 
         if (generation.getType() == Generation.Type.IMAGE) {
-            user.setBonusImageCredits(user.getBonusImageCredits() + 1);
+            user.setBonusImageCredits(user.getBonusImageCredits() + 2);
         } else {
             user.setBonusVideoCredits(user.getBonusVideoCredits() + 1);
         }

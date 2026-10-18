@@ -31,11 +31,7 @@ public class GenerationWorker {
             if (g.getType() == Generation.Type.IMAGE) {
                 if (g.getModel() == null || g.getModel().isBlank()) g.setModel(CloudflareImageClient.MODEL_KEY);
                 repo.save(g);
-                if (CloudflareImageClient.MODEL_KEY.equals(g.getModel())) {
-                    media = cloudflare.generateImage(g.getPrompt(), g.getAspectRatio());
-                } else {
-                    media = gemini.generateImage(g.getPrompt(), g.getAspectRatio(), g.getModel());
-                }
+                media = cloudflare.generateImage(g.getPrompt(), g.getAspectRatio(), g.getModel());
             } else {
                 g.setModel(gemini.videoModel());
                 g.setOperationName(gemini.startVideo(g.getPrompt(), g.getAspectRatio()));

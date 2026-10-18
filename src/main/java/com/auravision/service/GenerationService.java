@@ -23,6 +23,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class GenerationService {
+    private static final int IMAGE_CREDIT_COST = 2;
     private static final List<Generation.Status> ACTIVE = List.of(Generation.Status.PENDING, Generation.Status.RUNNING);
     private static final Set<String> IMAGE_RATIOS = Set.of("1:1", "16:9", "9:16", "4:3", "3:4");
     private static final Set<String> VIDEO_RATIOS = Set.of("16:9", "9:16");
@@ -59,9 +60,10 @@ public class GenerationService {
                     "This image model is not included in your current plan. Free unlocks AuraVision Fast, PLUS unlocks Lite, PRO unlocks Standard, and ULTRA unlocks Pro.");
         }
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
+        int creditCost = type == Generation.Type.IMAGE ? IMAGE_CREDIT_COST : 1;
         long used = usedToday(owner, type);
         boolean bonusCreditUsed = false;
-        if (used >= limit) {
+        if (used + creditCost > limit) {
             if (!consumeBonusCredit(owner, type)) {
                 if (limit == 0)
                     throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "Video generation needs a paid plan or an available bonus video credit.");
@@ -142,7 +144,8 @@ public class GenerationService {
 
     private long usedToday(String owner, Generation.Type type) {
         Instant start = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
-        return repo.countByOwnerTokenAndTypeAndCreatedAtAfterAndStatusNot(owner, type, start, Generation.Status.FAILED);
+        long generated = repo.countByOwnerTokenAndTypeAndCreatedAtAfterAndStatusNot(owner, type, start, Generation.Status.FAILED);
+        return type == Generation.Type.IMAGE ? generated * IMAGE_CREDIT_COST : generated;
     }
 
     private static String normalise(Generation.Type type, String ratio) {

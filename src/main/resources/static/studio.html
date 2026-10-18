@@ -1974,18 +1974,12 @@
       const select = document.getElementById('imageModelSelect');
       const hint = document.getElementById('imageModelAccessHint');
       if (!select) return;
-      const paidAccess = activeAccount.authenticated && ['PLUS', 'PRO', 'ULTRA'].includes(String(activeAccount.plan || '').toUpperCase());
-      Array.from(select.options).forEach(option => {
-        option.disabled = option.value !== 'cloudflare-flux-schnell' && !paidAccess;
-      });
-      if (hint) {
-        hint.textContent = paidAccess
-          ? 'Your paid plan unlocks AuraVision Lite, Standard, and Pro. Daily image limits follow your plan; provider availability and quotas still apply.'
-          : 'Free access uses AuraVision Fast. Purchase any paid plan in My Account to unlock AuraVision Lite, Standard, and Pro for the duration of your access.';
-      }
-      if (select.selectedOptions.length && select.selectedOptions[0].disabled) {
-        select.value = 'cloudflare-flux-schnell';
-      }
+      const plan = activeAccount.authenticated ? String(activeAccount.plan || 'FREE').toUpperCase() : 'FREE';
+      const allowed = { FREE: 'cloudflare-flux-schnell', PLUS: 'gemini-3.1-flash-lite-image', PRO: 'gemini-3.1-flash-image', ULTRA: 'gemini-3-pro-image' };
+      const model = allowed[plan] || allowed.FREE;
+      Array.from(select.options).forEach(option => { option.disabled = option.value !== model; });
+      select.value = model;
+      if (hint) hint.textContent = ({ FREE: 'Free plan: AuraVision Fast only.', PLUS: 'PLUS plan: AuraVision Lite only.', PRO: 'PRO plan: AuraVision Standard only.', ULTRA: 'ULTRA plan: AuraVision Pro only.' })[plan] || 'Free plan: AuraVision Fast only.';
     }
 
     async function syncRemoteCreations() {

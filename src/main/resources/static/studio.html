@@ -1553,12 +1553,12 @@
               <span style="font-weight:500;color:var(--muted);">Real AI</span>
             </div>
             <select class="input-field" id="imageModelSelect" aria-label="Choose image generation provider">
-              <option value="cloudflare-flux-schnell" selected>AuraVision AI Fast · Free daily allowance</option>
-              <option value="gemini-3.1-flash-image">AuraVision AI Standard · Provider quota may apply</option>
-              <option value="gemini-3-pro-image">AuraVision AI Pro · Provider quota may apply</option>
-              <option value="gemini-3.1-flash-lite-image">AuraVision AI Lite · Provider quota may apply</option>
+              <option value="cloudflare-flux-schnell" selected>AuraVision Fast · Free daily allowance</option>
+              <option value="gemini-3.1-flash-lite-image">AuraVision Lite · Paid plan access</option>
+              <option value="gemini-3.1-flash-image">AuraVision Standard · Paid plan access</option>
+              <option value="gemini-3-pro-image">AuraVision Pro · Paid plan access</option>
             </select>
-            <p style="font-size:11px;color:var(--muted);margin-top:6px;">Default: AuraVision AI Fast. Available image modes and daily limits depend on server-side provider configuration. API credentials stay on the server.</p>
+            <p id="imageModelAccessHint" style="font-size:11px;color:var(--muted);margin-top:6px;">Free access uses AuraVision Fast. Purchase any paid plan to unlock AuraVision Lite, Standard, and Pro for the duration of your access. Model availability still depends on configured providers and their quotas.</p>
           </div>
 
           <!-- Style Presets -->
@@ -1958,6 +1958,7 @@
         activeAccount = { authenticated: false, email: null, storageKey: 'visitor' };
       }
       accountStorageScope = activeAccount.storageKey || 'visitor';
+      updateImageModelAccess();
       const nameEl = document.getElementById('navUserName');
       const avatarEl = document.getElementById('navUserAvatar');
       if (nameEl) nameEl.textContent = activeAccount.authenticated && activeAccount.email
@@ -1966,6 +1967,24 @@
         ? activeAccount.email.charAt(0).toUpperCase() : 'A';
       if (activeAccount.authenticated && Number.isFinite(Number(activeAccount.imagesLeft))) {
         localStorage.setItem(storageKey('aura_credits'), String(activeAccount.imagesLeft));
+      }
+    }
+
+    function updateImageModelAccess() {
+      const select = document.getElementById('imageModelSelect');
+      const hint = document.getElementById('imageModelAccessHint');
+      if (!select) return;
+      const paidAccess = activeAccount.authenticated && ['PLUS', 'PRO', 'ULTRA'].includes(String(activeAccount.plan || '').toUpperCase());
+      Array.from(select.options).forEach(option => {
+        option.disabled = option.value !== 'cloudflare-flux-schnell' && !paidAccess;
+      });
+      if (hint) {
+        hint.textContent = paidAccess
+          ? 'Your paid plan unlocks AuraVision Lite, Standard, and Pro. Daily image limits follow your plan; provider availability and quotas still apply.'
+          : 'Free access uses AuraVision Fast. Purchase any paid plan in My Account to unlock AuraVision Lite, Standard, and Pro for the duration of your access.';
+      }
+      if (select.selectedOptions.length && select.selectedOptions[0].disabled) {
+        select.value = 'cloudflare-flux-schnell';
       }
     }
 

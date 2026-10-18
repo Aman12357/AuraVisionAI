@@ -83,12 +83,13 @@ public class BillingService {
             Subscription current = subs.findByOwnerToken(owner)
                 .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().isAfter(Instant.now()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "An active paid plan is required to upgrade."));
-            currentPlan = current.getPlan();
-            if (currentPlan == null || plan.ordinal() <= currentPlan.ordinal()) {
+            final Plan activePlan = current.getPlan();
+            currentPlan = activePlan;
+            if (activePlan == null || plan.ordinal() <= activePlan.ordinal()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a plan higher than your current plan.");
             }
             Payment priorPaid = payments.findTop20ByOwnerTokenOrderByCreatedAtDesc(owner).stream()
-                .filter(p -> p.getStatus() == Payment.Status.PAID && p.getPlan() == currentPlan)
+                .filter(p -> p.getStatus() == Payment.Status.PAID && p.getPlan() == activePlan)
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
                     "We could not verify your existing plan payment. Contact support before upgrading."));

@@ -374,7 +374,7 @@
       var interval = document.createElement("div"); interval.className = "small";
       interval.textContent = yearly ? "for 365 days · one-time payment" : "for 30 days · one-time payment";
       var limits = document.createElement("p"); limits.className = "small";
-      limits.textContent = plan.imagesPerDay + " images per day · " + plan.videosPerDay + " videos per day";
+      limits.textContent = plan.imagesPerDay + " image credits per day · " + plan.videosPerDay + " videos per day";
       var button = document.createElement("button"); button.type = "button";
       var isUpgrade = currentRank > 0;
       button.textContent = isUpgrade ? "Upgrade to " + plan.name : "Choose " + plan.name;

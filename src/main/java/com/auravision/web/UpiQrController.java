@@ -41,7 +41,7 @@ public class UpiQrController {
             return ResponseEntity.ok()
                 .contentType(type)
                 .cacheControl(CacheControl.noCache())
-                .header(HttpHeaders.X_CONTENT_TYPE_OPTIONS, "nosniff")
+                .header("X-Content-Type-Options", "nosniff")
                 .body(body);
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 404) return ResponseEntity.notFound().build();

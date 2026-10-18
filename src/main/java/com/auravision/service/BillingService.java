@@ -70,31 +70,63 @@ public class BillingService {
         return subs.findByOwnerToken(owner).map(Subscription::getStatus);
     }
 
-    /** Creates a single-charge order. Access is granted only after a verified captured payment. */
+    /** Creates a single-charge order. Access changes only after a verified captured payment. */
     @Transactional
-    public OneTimeCheckoutStart createOneTimeOrder(String owner, String email, Plan plan, boolean yearly) {
+    public OneTimeCheckoutStart createOneTimeOrder(String owner, String email, Plan plan, boolean yearly, boolean upgrade) {
         if (!paymentSetupReady()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, paymentSetupMessage());
         if (plan == null || plan == Plan.FREE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a paid plan.");
-        if (planFor(owner) != Plan.FREE) throw new ResponseStatusException(HttpStatus.CONFLICT,
-            "You already have active paid access. Wait until it expires before purchasing another plan.");
-        int amount = pricing.price(plan, yearly);
+
+        Plan currentPlan = planFor(owner);
+        boolean effectiveYearly = yearly;
+        int amount;
+        if (upgrade) {
+            Subscription current = subs.findByOwnerToken(owner)
+                .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().isAfter(Instant.now()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "An active paid plan is required to upgrade."));
+            currentPlan = current.getPlan();
+            if (currentPlan == null || plan.ordinal() <= currentPlan.ordinal()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a plan higher than your current plan.");
+            }
+            Payment priorPaid = payments.findTop20ByOwnerTokenOrderByCreatedAtDesc(owner).stream()
+                .filter(p -> p.getStatus() == Payment.Status.PAID && p.getPlan() == currentPlan)
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                    "We could not verify your existing plan payment. Contact support before upgrading."));
+            effectiveYearly = priorPaid.isYearly();
+            amount = pricing.price(plan, effectiveYearly) - priorPaid.getAmountRupees();
+            if (amount <= 0) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "The remaining upgrade amount is not positive. Contact support to change plans.");
+            boolean upgradePending = payments.findTop20ByOwnerTokenOrderByCreatedAtDesc(owner).stream()
+                .anyMatch(p -> p.isUpgrade() && p.getStatus() != Payment.Status.FAILED
+                    && p.getStatus() != Payment.Status.PAID);
+            if (upgradePending) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "An upgrade payment is already pending. Finish or confirm it before starting another.");
+        } else {
+            if (currentPlan != Plan.FREE) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "You already have active paid access. Choose Upgrade on a higher plan instead.");
+            amount = pricing.price(plan, yearly);
+        }
+
         Payment purchase = new Payment();
         purchase.setOrderId("AV" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
         purchase.setOwnerToken(owner);
         purchase.setPlan(plan);
-        purchase.setYearly(yearly);
+        purchase.setYearly(effectiveYearly);
+        purchase.setUpgrade(upgrade);
         purchase.setAmountRupees(amount);
         purchase.setEmail(email);
         purchase.setStatus(Payment.Status.CREATED);
         purchase = payments.saveAndFlush(purchase);
         try {
-            String razorpayOrderId = razorpay.createOrder(amount, purchase.getId().toString(), plan, yearly, email);
-            // Legacy column stores the provider reference for both old subscriptions and one-time orders.
+            String razorpayOrderId = razorpay.createOrder(amount, purchase.getId().toString(), plan, effectiveYearly, email);
             purchase.setRazorpaySubscriptionId(razorpayOrderId);
             purchase.setStatus(Payment.Status.PENDING);
             payments.save(purchase);
+            String description = upgrade
+                ? "Upgrade to " + title(plan.name()) + " (remaining balance, one-time)"
+                : title(plan.name()) + (effectiveYearly ? " 365-day access (one-time)" : " 30-day access (one-time)");
             return new OneTimeCheckoutStart(purchase.getOrderId(), razorpayOrderId, razorpay.publicKeyId(), email,
-                plan.name(), yearly, amount, title(plan.name()) + (yearly ? " 365-day access (one-time)" : " 30-day access (one-time)"));
+                plan.name(), effectiveYearly, amount, description);
         } catch (RuntimeException e) {
             purchase.setStatus(Payment.Status.FAILED);
             payments.save(purchase);
@@ -288,12 +320,25 @@ public class BillingService {
         if (paymentId.isBlank() || payments.findByGatewayPaymentId(paymentId).isPresent()) return;
         Instant now = Instant.now();
         Subscription local = subs.findByOwnerToken(purchase.getOwnerToken()).orElseGet(Subscription::new);
-        local.setOwnerToken(purchase.getOwnerToken());
-        local.setPlan(purchase.getPlan());
-        local.setEmail(purchase.getEmail());
-        local.setRazorpaySubscriptionId(null);
-        local.setStatus("ACTIVE");
-        local.setExpiresAt(now.plus(purchase.isYearly() ? Duration.ofDays(365) : Duration.ofDays(30)));
+        Instant existingExpiry = local.getExpiresAt();
+        if (purchase.isUpgrade()) {
+            if (local.getPlan() == null || purchase.getPlan().ordinal() <= local.getPlan().ordinal()) return;
+            local.setOwnerToken(purchase.getOwnerToken());
+            local.setPlan(purchase.getPlan());
+            local.setEmail(purchase.getEmail());
+            local.setRazorpaySubscriptionId(null);
+            local.setStatus("ACTIVE");
+            // An upgrade changes the model tier but does not reset the user's paid-through date.
+            local.setExpiresAt(existingExpiry != null && existingExpiry.isAfter(now)
+                ? existingExpiry : now.plus(purchase.isYearly() ? Duration.ofDays(365) : Duration.ofDays(30)));
+        } else {
+            local.setOwnerToken(purchase.getOwnerToken());
+            local.setPlan(purchase.getPlan());
+            local.setEmail(purchase.getEmail());
+            local.setRazorpaySubscriptionId(null);
+            local.setStatus("ACTIVE");
+            local.setExpiresAt(now.plus(purchase.isYearly() ? Duration.ofDays(365) : Duration.ofDays(30)));
+        }
         subs.save(local);
         purchase.setGatewayPaymentId(paymentId);
         purchase.setTxnRef(paymentId);

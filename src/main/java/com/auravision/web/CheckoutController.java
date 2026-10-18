@@ -1,9 +1,7 @@
 package com.auravision.web;
 
 import com.auravision.model.Plan;
-import com.auravision.service.AdminCouponService;
 import com.auravision.service.BillingService;
-import com.auravision.service.CouponCheckoutService;
 import com.auravision.service.PlanPricingService;
 import com.auravision.service.RazorpayGateway;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,12 +23,10 @@ import java.util.List;
 public class CheckoutController {
     private final BillingService billing;
     private final RazorpayGateway razorpay;
-    private final CouponCheckoutService couponCheckout;
     private final PlanPricingService pricing;
 
     public record PlanView(String id, String name, int monthly, int yearly, int imagesPerDay, int videosPerDay) {}
-    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly, @Size(max = 40) String couponCode) {}
-    public record CouponValidateRequest(@NotBlank @Size(max = 40) String code, @NotNull Plan plan, boolean yearly) {}
+    public record SubscriptionRequest(@NotNull Plan plan, boolean yearly) {}
     public record VerifyRequest(@NotBlank String orderId, @NotBlank String razorpayPaymentId,
                                 @NotBlank String razorpaySubscriptionId, @NotBlank String razorpaySignature) {}
     public record OneTimeVerifyRequest(@NotBlank String orderId, @NotBlank String razorpayOrderId,
@@ -50,11 +46,6 @@ public class CheckoutController {
     public CheckoutConfig config() {
         return new CheckoutConfig(billing.paymentSetupReady(), billing.isPersistentDatabaseConfigured(),
             razorpay.isConfigured(), "Razorpay", billing.paymentSetupMessage());
-    }
-
-    @PostMapping("/coupons/validate")
-    public AdminCouponService.CouponQuote validateCoupon(@Valid @RequestBody CouponValidateRequest body) {
-        return couponCheckout.quote(body.code(), body.plan(), body.yearly());
     }
 
     @PostMapping("/one-time")

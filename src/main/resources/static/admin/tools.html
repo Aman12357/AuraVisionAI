@@ -28,7 +28,7 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
 <body>
 <header><div class="nav"><div class="brand">AuraVision AI <span>/ Admin tools</span></div><div class="actions"><a class="btn" href="/admin/dashboard.html">Dashboard</a><button class="btn" id="logout" type="button">Sign out</button></div></div></header>
 <main>
-  <h1>User management</h1><p class="intro">Manage bonus image/video credits, reset account passwords, and create or disable checkout coupon codes. Every change is checked by the server and stored in the database.</p>
+  <h1>User management</h1><p class="intro">Manage bonus image/video credits, reset account passwords, and update plan prices. Every change is checked by the server and stored in the database.</p>
   <p class="status" id="pageStatus" role="status" aria-live="polite">Checking admin session…</p>
   <div class="grid">
     <section class="panel wide" id="subscriptionPricingPanel">
@@ -51,21 +51,6 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
       <div class="form-actions"><button class="btn primary" id="resetPassword" type="button">Reset password</button></div>
       <p class="note">Passwords are never shown in the admin panel. Share the new password securely with the account owner.</p><p class="status" id="passwordStatus" role="status" aria-live="polite"></p>
     </section>
-    <section class="panel">
-      <h2>Create discount coupon</h2><p class="muted">Coupons are validated on the server and create a discounted Razorpay recurring plan when applied at checkout.</p>
-      <label for="couponCode">Coupon code</label><input id="couponCode" type="text" maxlength="40" placeholder="WELCOME20" autocapitalize="characters" autocomplete="off">
-      <div class="formrow"><div><label for="discountPercent">Discount percent (1–90)</label><input id="discountPercent" type="number" min="1" max="90" step="1" value="10"></div><div><label for="maxRedemptions">Maximum checkouts (optional)</label><input id="maxRedemptions" type="number" min="1" step="1" placeholder="Unlimited"></div></div>
-      <label for="couponExpiry">Expiry (optional)</label><input id="couponExpiry" type="datetime-local">
-      <div class="form-actions"><button class="btn primary" id="createCoupon" type="button">Create coupon</button></div>
-      <p class="note">Discounts affect the recurring price for that subscription. A coupon use is reserved when a provider checkout is created; abandoned checkouts can therefore consume a limited use.</p><p class="status" id="couponStatus" role="status" aria-live="polite"></p>
-    </section>
-    <section class="panel">
-      <h2>Coupon management</h2><p class="muted">Disable a coupon to prevent it being used on future checkouts. Existing subscriptions retain their agreed recurring price.</p>
-      <div class="form-actions"><button class="btn" id="refreshCoupons" type="button">Refresh coupons</button></div>
-      <p class="status" id="couponListStatus" role="status" aria-live="polite">Loading coupons…</p>
-      <div class="desktop-table tablewrap"><table><thead><tr><th>Code</th><th>Discount</th><th>Status</th><th>Uses</th><th>Expiry</th><th>Action</th></tr></thead><tbody id="couponTable"></tbody></table></div>
-      <div class="cards" id="couponCards"></div>
-    </section>
     <section class="panel wide">
       <h2>Registered accounts</h2><p class="muted">Account overview includes remaining daily quota and bonus credit balances. Password hashes and session tokens are not exposed.</p>
       <label for="userSearch">Search accounts</label><input id="userSearch" type="search" placeholder="Search by email or ID">
@@ -79,7 +64,6 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
 (function(){
   "use strict";
   var users=[];
-  var coupons=[];
   var pageStatus=document.getElementById("pageStatus");
   function el(tag,text,cls){var node=document.createElement(tag);node.textContent=String(text==null?"—":text);if(cls)node.className=cls;return node}
   function date(value){if(!value)return "No expiry";var d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleString()}
@@ -101,15 +85,6 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
     message("usersStatus",filtered.length+" account(s) shown.");
   }
   async function loadUsers(){try{users=await api("/api/admin/users");renderUserSelects();renderUsers();message("pageStatus","Signed in as "+(await api("/api/admin/me")).email,"good")}catch(e){message("usersStatus",e.message,"bad")}}
-  function couponRow(c){
-    var tr=document.createElement("tr");
-    [c.code,c.discountPercent+"%",c.active?"Active":"Disabled",(c.redeemedCount||0)+(c.maxRedemptions==null?" / ∞":" / "+c.maxRedemptions),date(c.expiresAt)].forEach(function(v){tr.appendChild(el("td",v))});
-    var action=el("button",c.active?"Disable":"Enable","btn");action.type="button";action.addEventListener("click",async function(){action.disabled=true;try{await api("/api/admin/coupons/"+c.id+"/active","POST",{active:!c.active});await loadCoupons()}catch(e){message("couponListStatus",e.message,"bad")}finally{action.disabled=false}});var td=document.createElement("td");td.appendChild(action);tr.appendChild(td);return tr;
-  }
-  async function loadCoupons(){
-    var table=document.getElementById("couponTable"),cards=document.getElementById("couponCards");table.replaceChildren();cards.replaceChildren();
-    try{coupons=await api("/api/admin/coupons");coupons.forEach(function(c){table.appendChild(couponRow(c));var card=document.createElement("article");card.className="card";var head=document.createElement("div");head.className="card-head";head.append(el("strong",c.code),el("span",c.active?"Active":"Disabled","pill"));card.appendChild(head);var meta=document.createElement("div");meta.className="card-meta";[["Discount",c.discountPercent+"%"],["Uses",(c.redeemedCount||0)+(c.maxRedemptions==null?" / unlimited":" / "+c.maxRedemptions)],["Expiry",date(c.expiresAt)]].forEach(function(p){var cell=document.createElement("div");cell.append(el("span",p[0],"meta-label"),el("span",p[1],"meta-value"));meta.appendChild(cell)});card.appendChild(meta);var button=el("button",c.active?"Disable coupon":"Enable coupon","btn");button.type="button";button.style.marginTop="12px";button.addEventListener("click",async function(){button.disabled=true;try{await api("/api/admin/coupons/"+c.id+"/active","POST",{active:!c.active});await loadCoupons()}catch(e){message("couponListStatus",e.message,"bad")}finally{button.disabled=false}});card.appendChild(button);cards.appendChild(card)});message("couponListStatus",coupons.length+" coupon(s) found.");if(!coupons.length)message("couponListStatus","No coupons yet. Create one above.")}catch(e){message("couponListStatus",e.message,"bad")}
-  }
   async function loadPricing(){
     var container=document.getElementById("pricingRows");
     container.replaceChildren();
@@ -154,10 +129,8 @@ input,select{display:block;width:100%;min-width:0;min-height:45px;padding:10px 1
   document.getElementById("userSearch").addEventListener("input",renderUsers);
   document.getElementById("saveCredits").addEventListener("click",async function(){var id=document.getElementById("creditUser").value;var imageDelta=Number(document.getElementById("imageDelta").value||0),videoDelta=Number(document.getElementById("videoDelta").value||0);if(!id){message("creditStatus","Choose a user first.","bad");return}if(!Number.isInteger(imageDelta)||!Number.isInteger(videoDelta)||imageDelta===0&&videoDelta===0){message("creditStatus","Enter a non-zero whole-number adjustment.","bad");return}this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/credits","POST",{imageDelta:imageDelta,videoDelta:videoDelta});message("creditStatus","Saved. Bonus balances: "+result.bonusImageCredits+" image and "+result.bonusVideoCredits+" video credits.","good");document.getElementById("imageDelta").value="0";document.getElementById("videoDelta").value="0";await loadUsers()}catch(e){message("creditStatus",e.message,"bad")}finally{this.disabled=false}});
   document.getElementById("resetPassword").addEventListener("click",async function(){var id=document.getElementById("passwordUser").value;var password=document.getElementById("newPassword").value;if(!id){message("passwordStatus","Choose a user first.","bad");return}if(password.length<10){message("passwordStatus","New password must be at least 10 characters.","bad");return}if(!window.confirm("Reset this user's password and sign out all their current sessions?"))return;this.disabled=true;try{var result=await api("/api/admin/users/"+id+"/password","POST",{newPassword:password});message("passwordStatus",result.message,"good");document.getElementById("newPassword").value=""}catch(e){message("passwordStatus",e.message,"bad")}finally{this.disabled=false}});
-  document.getElementById("createCoupon").addEventListener("click",async function(){var code=document.getElementById("couponCode").value.trim().toUpperCase();var percent=Number(document.getElementById("discountPercent").value);var maxText=document.getElementById("maxRedemptions").value.trim();var expiryText=document.getElementById("couponExpiry").value;if(!code){message("couponStatus","Enter a coupon code.","bad");return}var payload={code:code,discountPercent:percent,maxRedemptions:maxText?Number(maxText):null,expiresAt:expiryText?new Date(expiryText).toISOString():null};this.disabled=true;try{var result=await api("/api/admin/coupons","POST",payload);message("couponStatus","Created "+result.code+" with "+result.discountPercent+"% off.","good");document.getElementById("couponCode").value="";await loadCoupons()}catch(e){message("couponStatus",e.message,"bad")}finally{this.disabled=false}});
-  document.getElementById("refreshCoupons").addEventListener("click",loadCoupons);
   document.getElementById("logout").addEventListener("click",async function(){this.disabled=true;try{await api("/api/admin/logout","POST",{})}catch(_){}location.replace("/admin/login")});
-  (async function(){try{var me=await api("/api/admin/me");message("pageStatus","Signed in as "+me.email,"good");await Promise.all([loadUsers(),loadCoupons(),loadPricing()])}catch(e){message("pageStatus",e.message,"bad")}})();
+  (async function(){try{var me=await api("/api/admin/me");message("pageStatus","Signed in as "+me.email,"good");await Promise.all([loadUsers(),loadPricing()])}catch(e){message("pageStatus",e.message,"bad")}})();
 })();
 </script>
 </body>

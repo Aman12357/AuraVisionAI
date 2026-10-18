@@ -15,8 +15,8 @@ import java.time.Duration;
 import java.util.Base64;
 
 /**
- * Cloudflare Workers AI image generator using the FLUX.1 Schnell model.
- * The account ID and API token are server-side environment variables only.
+ * All branded AuraVision image modes are routed to Cloudflare Workers AI.
+ * The account ID and API token remain server-side environment variables only.
  */
 @Component
 public class CloudflareImageClient {
@@ -46,6 +46,17 @@ public class CloudflareImageClient {
     }
 
     public GeminiClient.Media generateImage(String prompt, String aspectRatio) throws Exception {
+        return generateImage(prompt, aspectRatio, MODEL_KEY);
+    }
+
+    public GeminiClient.Media generateImage(String prompt, String aspectRatio, String modelKey) throws Exception {
+        String cloudflareModel = switch (modelKey == null ? MODEL_KEY : modelKey) {
+            case "cloudflare-flux-schnell" -> "@cf/black-forest-labs/flux-1-schnell";
+            case "cloudflare-sdxl-lightning" -> "@cf/bytedance/stable-diffusion-xl-lightning";
+            case "cloudflare-sdxl-base" -> "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+            case "cloudflare-dreamshaper" -> "@cf/lykon/dreamshaper-8-lcm";
+            default -> throw new IllegalArgumentException("Unsupported AuraVision Cloudflare model.");
+        };
         if (accountId.isBlank() || apiToken.isBlank()) {
             throw new IllegalStateException(
                     "Cloudflare image generation is not configured yet. In Render > Environment, add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN. Keep the token private.");
@@ -54,14 +65,14 @@ public class CloudflareImageClient {
             throw new IllegalArgumentException("Please enter an image description.");
         }
         if (prompt.length() > 2048) {
-            throw new IllegalArgumentException("The image prompt must be 2,048 characters or fewer for Cloudflare FLUX.1 Schnell.");
+            throw new IllegalArgumentException("The image prompt must be 2,048 characters or fewer for Cloudflare Workers AI.");
         }
 
         ObjectNode body = om.createObjectNode();
         body.put("prompt", prompt);
-        body.put("steps", 4);
+        if ("@cf/black-forest-labs/flux-1-schnell".equals(cloudflareModel)) body.put("steps", 4);
 
-        String url = BASE + accountId + "/ai/run/" + model;
+        String url = BASE + accountId + "/ai/run/" + cloudflareModel;
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofMinutes(3))
                 .header("Authorization", "Bearer " + apiToken)
@@ -105,7 +116,7 @@ public class CloudflareImageClient {
         if (encoded.isBlank()) {
             String message = cloudflareError(responseBytes);
             throw new IllegalStateException(message.isBlank()
-                    ? "Cloudflare FLUX.1 Schnell returned no image. Please try a different prompt."
+                    ? "Cloudflare Workers AI returned no image. Please try a different prompt."
                     : "Cloudflare did not return an image: " + message);
         }
 

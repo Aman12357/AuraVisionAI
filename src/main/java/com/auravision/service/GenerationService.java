@@ -27,10 +27,10 @@ public class GenerationService {
     private static final Set<String> IMAGE_RATIOS = Set.of("1:1", "16:9", "9:16", "4:3", "3:4");
     private static final Set<String> VIDEO_RATIOS = Set.of("16:9", "9:16");
     private static final Set<String> IMAGE_MODELS = Set.of(
-            CloudflareImageClient.MODEL_KEY,
-            "gemini-3-pro-image",
-            "gemini-3.1-flash-image",
-            "gemini-3.1-flash-lite-image"
+            "cloudflare-flux-schnell",
+            "cloudflare-sdxl-lightning",
+            "cloudflare-sdxl-base",
+            "cloudflare-dreamshaper"
     );
 
     public record Usage(Plan plan, int imagesLeft, int videosLeft, Instant expiresAt) {}
@@ -48,7 +48,7 @@ public class GenerationService {
                 ? (requestedModel == null || requestedModel.isBlank() ? CloudflareImageClient.MODEL_KEY : requestedModel.trim())
                 : null;
         if (type == Generation.Type.IMAGE && !IMAGE_MODELS.contains(selectedModel))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image model. Choose Cloudflare FLUX.1 Schnell or one of the available Gemini image models.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image model. Choose one of the available AuraVision Cloudflare models.");
         if (repo.countByOwnerTokenAndStatusIn(owner, ACTIVE) >= maxActive)
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "You already have " + maxActive + " generations in progress. Wait for one to finish.");
@@ -56,7 +56,7 @@ public class GenerationService {
         Plan plan = billing.planFor(owner);
         if (type == Generation.Type.IMAGE && !modelAllowedForPlan(plan, selectedModel)) {
             throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,
-                    "This image mode is not included in your current plan. Free uses AuraVision Fast; PLUS unlocks Lite, PRO unlocks Standard, and ULTRA unlocks Pro.");
+                    "This image model is not included in your current plan. Free unlocks AuraVision Fast, PLUS unlocks Lite, PRO unlocks Standard, and ULTRA unlocks Pro.");
         }
         int limit = type == Generation.Type.VIDEO ? plan.videosPerDay : plan.imagesPerDay;
         long used = usedToday(owner, type);
@@ -100,10 +100,10 @@ public class GenerationService {
 
     private static boolean modelAllowedForPlan(Plan plan, String model) {
         return switch (plan) {
-            case FREE -> CloudflareImageClient.MODEL_KEY.equals(model);
-            case PLUS -> "gemini-3.1-flash-lite-image".equals(model);
-            case PRO -> "gemini-3.1-flash-image".equals(model);
-            case ULTRA -> "gemini-3-pro-image".equals(model);
+            case FREE -> "cloudflare-flux-schnell".equals(model);
+            case PLUS -> "cloudflare-sdxl-lightning".equals(model);
+            case PRO -> "cloudflare-sdxl-base".equals(model);
+            case ULTRA -> "cloudflare-dreamshaper".equals(model);
         };
     }
 

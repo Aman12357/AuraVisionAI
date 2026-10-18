@@ -360,7 +360,9 @@
       var price = document.createElement("div"); price.className = "plan-price";
       var regularAmount = Number(yearly ? plan.yearly : plan.monthly);
       var discountedQuote = couponQuote && couponQuote.planId === plan.id && couponQuote.yearly === !!yearly ? couponQuote : null;
-      if (discountedQuote) {
+      if (currentRank > 0) {
+        price.textContent = "Remaining upgrade amount calculated securely at checkout";
+      } else if (discountedQuote) {
         var discountedAmount = Number(discountedQuote.discountedAmountRupees);
         var original = document.createElement("span"); original.className = "price-original"; original.textContent = "Was " + money(regularAmount);
         var current = document.createElement("span"); current.textContent = money(discountedAmount);
@@ -468,7 +470,7 @@
     } catch (error) {
       showStatus(document.getElementById("checkoutMessage"), error.message, "bad");
       button.disabled = false;
-      button.textContent = "Choose " + titleCase(planId);
+      button.textContent = checkoutButtonLabel(planId, upgrade);
     }
   }
 

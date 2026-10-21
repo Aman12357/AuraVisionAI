@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root { color-scheme:dark; --bg:#0b0d12; --surface:#151821; --surface2:#1d212c; --text:#f1f3f8; --muted:#a3a9b8; --line:#2a2f3c; --blue:#7aa7ff; --good:#34d399; --warn:#fbbf24; --bad:#fb7185; --input-bg:#0f121a; --plan-bg:#10131b; --header-bg:rgba(11,13,18,.94); --button-text:#0b0d12; }
     :root[data-theme="light"] { color-scheme:light; --bg:#f8f9fc; --surface:#ffffff; --surface2:#f0f2f7; --text:#111827; --muted:#5e6678; --line:#dbe0eb; --blue:#3b82f6; --good:#047857; --warn:#92400e; --bad:#be123c; --input-bg:#ffffff; --plan-bg:#f8f9fc; --header-bg:rgba(248,249,252,.94); --button-text:#ffffff; }
@@ -116,6 +117,9 @@
         <div class="field" id="confirmField"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" inputmode="numeric" minlength="6" maxlength="6" pattern="[0-9]{6}" required placeholder="Repeat 6-digit PIN"></div>
         <div class="actions"><button id="authSubmit" type="submit">Create account</button><button id="toggleMode" type="button" class="secondary">I already have an account</button></div>
       </form>
+      <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:13px"><span style="height:1px;background:var(--line);flex:1"></span><span>or</span><span style="height:1px;background:var(--line);flex:1"></span></div>
+      <div id="googleSignInButton" aria-label="Continue with Google"></div>
+      <p id="googleStatus" class="muted small" role="status" style="margin-top:10px">Continue securely with your Google account.</p>
       <p class="muted small" style="margin-top:16px">AuraVision does not collect or store card numbers or CVV. Payment details are entered securely in Razorpay Checkout.</p>
     </div>
     <div class="panel">
@@ -212,6 +216,63 @@
     var data = await response.json().catch(function () { return {}; });
     if (!response.ok) throw new Error(data.message || data.error || data.detail || ("Request failed (HTTP " + response.status + ")."));
     return data;
+  }
+
+  var googleClientId = "";
+
+  function googleSignInStatus(message, kind) {
+    var el = document.getElementById("googleStatus");
+    if (!el) return;
+    el.textContent = message;
+    el.className = "small" + (kind ? " status " + kind : " muted");
+  }
+
+  async function setupGoogleSignIn() {
+    try {
+      var googleConfig = await api("/api/auth/google/config");
+      if (!googleConfig.enabled || !googleConfig.clientId) {
+        googleSignInStatus("Google sign-in will be available after the site owner configures its Google Client ID.", "warn");
+        return;
+      }
+      googleClientId = googleConfig.clientId;
+      var waitForGoogle = 0;
+      while ((!window.google || !window.google.accounts || !window.google.accounts.id) && waitForGoogle < 40) {
+        await new Promise(function(resolve) { window.setTimeout(resolve, 150); });
+        waitForGoogle++;
+      }
+      if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+        googleSignInStatus("Google sign-in could not load. Check your connection and refresh.", "bad");
+        return;
+      }
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async function(response) {
+          if (!response || !response.credential) {
+            googleSignInStatus("Google did not return a sign-in credential. Please try again.", "bad");
+            return;
+          }
+          googleSignInStatus("Verifying your Google account…", "");
+          try {
+            await api("/api/auth/google", "POST", {credential: response.credential});
+            var redirect = new URLSearchParams(window.location.search).get("redirect");
+            if (redirect && redirect.charAt(0) === "/" && redirect.indexOf("//") !== 0) {
+              window.location.assign(redirect);
+              return;
+            }
+            await loadPage();
+            googleSignInStatus("Signed in with Google.", "good");
+          } catch (error) {
+            googleSignInStatus(error.message || "Google sign-in failed.", "bad");
+          }
+        }
+      });
+      window.google.accounts.id.renderButton(document.getElementById("googleSignInButton"), {
+        type: "standard", theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black",
+        size: "large", text: "continue_with", shape: "rectangular", width: 320
+      });
+    } catch (error) {
+      googleSignInStatus("Google sign-in setup is not available right now.", "warn");
+    }
   }
 
   function setAuthMode(mode) {
@@ -566,7 +627,7 @@
   }
 
   setAuthMode(authMode);
-  Promise.all([loadConfigAndPlans(), loadPage()]).catch(function (error) { showStatus(authStatus, error.message, "bad"); });
+  Promise.all([loadConfigAndPlans(), loadPage(), setupGoogleSignIn()]).catch(function (error) { showStatus(authStatus, error.message, "bad"); });
 })();
 </script>
 <script>

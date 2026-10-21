@@ -97,11 +97,24 @@ public class BillingService {
             amount = pricing.price(plan, effectiveYearly) - priorPaid.getAmountRupees();
             if (amount <= 0) throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "The remaining upgrade amount is not positive. Contact support to change plans.");
-            boolean upgradePending = payments.findTop20ByOwnerTokenOrderByCreatedAtDesc(owner).stream()
-                .anyMatch(p -> p.isUpgrade() && p.getStatus() != Payment.Status.FAILED
-                    && p.getStatus() != Payment.Status.PAID);
+            // Release stale upgrade locks after five minutes, but preserve every old payment row.
+            // Expiration only unlocks retry; it does not assert that the provider payment failed.
+            Instant retryCutoff = Instant.now().minus(Duration.ofMinutes(5));
+            List<Payment> recentPayments = payments.findTop20ByOwnerTokenOrderByCreatedAtDesc(owner);
+            for (Payment pending : recentPayments) {
+                if (pending.isUpgrade()
+                    && (pending.getStatus() == Payment.Status.CREATED || pending.getStatus() == Payment.Status.PENDING)
+                    && pending.getCreatedAt() != null && pending.getCreatedAt().isBefore(retryCutoff)) {
+                    pending.setStatus(Payment.Status.EXPIRED);
+                    payments.save(pending);
+                }
+            }
+            boolean upgradePending = recentPayments.stream()
+                .anyMatch(p -> p.isUpgrade()
+                    && (p.getStatus() == Payment.Status.CREATED || p.getStatus() == Payment.Status.PENDING)
+                    && p.getCreatedAt() != null && !p.getCreatedAt().isBefore(retryCutoff));
             if (upgradePending) throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "An upgrade payment is already pending. Finish or confirm it before starting another.");
+                "An upgrade payment is already pending. You can retry after five minutes if it is still pending.");
         } else {
             if (currentPlan != Plan.FREE) throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "You already have active paid access. Choose Upgrade on a higher plan instead.");

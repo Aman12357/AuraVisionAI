@@ -7,6 +7,9 @@ import com.auravision.service.GenerationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestClient;
+import java.util.Map;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -28,11 +31,15 @@ public class AccountController {
     private final AccountService accounts;
     private final BillingService billing;
     private final GenerationService generations;
+    @Value("${GOOGLE_CLIENT_ID:}") private String googleClientId;
+    private final RestClient googleRestClient = RestClient.create();
 
     public record RegisterRequest(@NotBlank @Email @Size(max = 254) String email,
                                   @NotBlank @Pattern(regexp = "[0-9]{6}", message = "Password must be exactly 6 digits.") String password) {}
     public record LoginRequest(@NotBlank @Email @Size(max = 254) String email,
                                @NotBlank @Size(max = 128) String password) {}
+    public record GoogleLoginRequest(@NotBlank String credential) {}
+    public record GoogleConfig(boolean enabled, String clientId) {}
     public record AuthView(boolean authenticated, String email, Instant createdAt, String storageKey,
                            String plan, Instant expiresAt, String subscriptionStatus,
                            int imagesLeft, int videosLeft, boolean databaseReady) {}
@@ -56,6 +63,42 @@ public class AccountController {
         AccountUser user = accounts.authenticate(body.email(), body.password());
         writeSessionCookie(request, response, accounts.createSession(user));
         return view(user);
+    }
+
+    @GetMapping("/google/config")
+    public GoogleConfig googleConfig() {
+        return new GoogleConfig(googleClientId != null && !googleClientId.isBlank(), googleClientId);
+    }
+
+    @PostMapping("/google")
+    public AuthView googleLogin(@Valid @RequestBody GoogleLoginRequest body,
+                                @RequestAttribute(OwnerFilter.ATTR) String anonymousOwner,
+                                HttpServletRequest request, HttpServletResponse response) {
+        if (googleClientId == null || googleClientId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Google sign-in is not configured yet. The site owner must set GOOGLE_CLIENT_ID in Render.");
+        }
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> claims = googleRestClient.get()
+                .uri("https://oauth2.googleapis.com/tokeninfo?id_token={token}", body.credential())
+                .retrieve().body(Map.class);
+            if (claims == null
+                    || !googleClientId.equals(String.valueOf(claims.get("aud")))
+                    || !"true".equalsIgnoreCase(String.valueOf(claims.get("email_verified")))
+                    || !("accounts.google.com".equals(String.valueOf(claims.get("iss")))
+                         || "https://accounts.google.com".equals(String.valueOf(claims.get("iss"))))
+                    || claims.get("email") == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google could not verify this account. Please try again.");
+            }
+            AccountUser user = accounts.findOrCreateGoogleAccount(String.valueOf(claims.get("email")), anonymousOwner);
+            writeSessionCookie(request, response, accounts.createSession(user));
+            return view(user);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google sign-in verification failed. Please try again.");
+        }
     }
 
     @GetMapping("/me")

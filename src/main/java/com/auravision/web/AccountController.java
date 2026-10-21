@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +30,7 @@ public class AccountController {
     private final GenerationService generations;
 
     public record RegisterRequest(@NotBlank @Email @Size(max = 254) String email,
-                                  @NotBlank @Size(min = 10, max = 128) String password) {}
+                                  @NotBlank @Pattern(regexp = "[0-9]{6}", message = "Password must be exactly 6 digits.") String password) {}
     public record LoginRequest(@NotBlank @Email @Size(max = 254) String email,
                                @NotBlank @Size(max = 128) String password) {}
     public record AuthView(boolean authenticated, String email, Instant createdAt, String storageKey,

@@ -109,11 +109,11 @@
     <div class="panel">
       <div class="eyebrow">Account access</div>
       <h2 id="authHeading">Create your account</h2>
-      <p class="muted small" id="authDescription">Use a unique email and a strong password. Your password is hashed on the server.</p>
+      <p class="muted small" id="authDescription">Use a unique email and a 6-digit numeric PIN. It is hashed on the server.</p>
       <form id="authForm">
         <div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div>
-        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="At least 10 characters"></div>
-        <div class="field" id="confirmField"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Repeat your password"></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" inputmode="numeric" minlength="6" maxlength="6" pattern="[0-9]{6}" required placeholder="Enter 6-digit PIN"></div>
+        <div class="field" id="confirmField"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" inputmode="numeric" minlength="6" maxlength="6" pattern="[0-9]{6}" required placeholder="Repeat 6-digit PIN"></div>
         <div class="actions"><button id="authSubmit" type="submit">Create account</button><button id="toggleMode" type="button" class="secondary">I already have an account</button></div>
       </form>
       <p class="muted small" style="margin-top:16px">AuraVision does not collect or store card numbers or CVV. Payment details are entered securely in Razorpay Checkout.</p>
@@ -219,11 +219,30 @@
     var registering = authMode === "register";
     document.getElementById("authHeading").textContent = registering ? "Create your account" : "Sign in";
     document.getElementById("authDescription").textContent = registering
-      ? "Use a unique email and a strong password. Passwords are hashed on the server."
+      ? "Use a unique email and a 6-digit numeric PIN. PINs are hashed on the server."
       : "Sign in to your existing AuraVision AI account.";
     document.getElementById("confirmField").classList.toggle("hidden", !registering);
     document.getElementById("confirmPassword").required = registering;
-    document.getElementById("password").autocomplete = registering ? "new-password" : "current-password";
+    var passwordInput = document.getElementById("password");
+    passwordInput.autocomplete = registering ? "new-password" : "current-password";
+    passwordInput.inputMode = registering ? "numeric" : "text";
+    if (registering) {
+      passwordInput.minLength = 6;
+      passwordInput.maxLength = 6;
+      passwordInput.pattern = "[0-9]{6}";
+      passwordInput.placeholder = "Enter 6-digit PIN";
+    } else {
+      passwordInput.removeAttribute("minlength");
+      passwordInput.maxLength = 128;
+      passwordInput.removeAttribute("pattern");
+      passwordInput.placeholder = "Enter your password";
+    }
+    var confirmInput = document.getElementById("confirmPassword");
+    if (registering) {
+      confirmInput.minLength = 6;
+      confirmInput.maxLength = 6;
+      confirmInput.pattern = "[0-9]{6}";
+    }
     submitButton.textContent = registering ? "Create account" : "Sign in";
     document.getElementById("toggleMode").textContent = registering ? "I already have an account" : "Create a new account";
   }
@@ -239,8 +258,8 @@
     if (authMode === "register" && password !== confirmPassword) {
       showStatus(authStatus, "Passwords do not match.", "bad"); return;
     }
-    if (authMode === "register" && password.length < 10) {
-      showStatus(authStatus, "Use a password with at least 10 characters.", "bad"); return;
+    if (authMode === "register" && !/^[0-9]{6}$/.test(password)) {
+      showStatus(authStatus, "Create your account with exactly 6 digits for the PIN.", "bad"); return;
     }
     submitButton.disabled = true;
     showStatus(authStatus, authMode === "register" ? "Creating your account…" : "Signing in…", "");

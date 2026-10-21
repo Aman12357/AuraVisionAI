@@ -56,6 +56,30 @@ public class AccountService {
         }
     }
 
+    @Transactional
+    public AccountUser findOrCreateGoogleAccount(String email, String anonymousOwnerToken) {
+        if (!isPersistentDatabaseConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Google sign-in requires the persistent PostgreSQL database. Check the AuraVision service setup in Render.");
+        }
+        String normalisedEmail = normaliseEmail(email);
+        Optional<AccountUser> existing = users.findByEmail(normalisedEmail);
+        if (existing.isPresent()) return existing.get();
+
+        AccountUser user = new AccountUser();
+        user.setEmail(normalisedEmail);
+        byte[] randomPassword = new byte[32];
+        RANDOM.nextBytes(randomPassword);
+        user.setPasswordHash(passwordHasher.hash(Base64.getUrlEncoder().withoutPadding().encodeToString(randomPassword)));
+        user.setOwnerToken(java.util.UUID.randomUUID().toString());
+        try {
+            return users.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            return users.findByEmail(normalisedEmail).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.CONFLICT, "Could not create your Google account. Please retry."));
+        }
+    }
+
     @Transactional(readOnly = true)
     public AccountUser authenticate(String email, String password) {
         if (!isPersistentDatabaseConfigured()) {

@@ -10,7 +10,7 @@ import java.time.Instant;
 @Table(name = "payments")
 @Getter @Setter @NoArgsConstructor
 public class Payment {
-    public enum Status { CREATED, PENDING, PAID, FAILED }
+    public enum Status { CREATED, PENDING, PAID, FAILED, EXPIRED }
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false, unique = true, length = 40)
